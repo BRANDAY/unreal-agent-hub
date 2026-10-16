@@ -1,0 +1,1 @@
+{"conversation_id":"conv-42","generation_id":"gen-1","model":"auto","hook_event_name":"beforeShellExecution","cursor_version":"2.4.0","workspace_roots":["/Users/me/game"],"user_email":"dev@example.com","transcript_path":null,"command":"UnrealEditor-Cmd Game.uproject -run=cook","cwd":"/Users/me/game","sandbox":false}

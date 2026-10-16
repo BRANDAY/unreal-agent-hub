@@ -1,0 +1,1 @@
+{"conversation_id":"conv-42","generation_id":"gen-3","model":"auto","hook_event_name":"beforeSubmitPrompt","cursor_version":"2.4.0","workspace_roots":["/Users/me/game"],"user_email":"dev@example.com","prompt":"bake the lighting","attachments":[{"type":"file","file_path":"/Users/me/game/Config/DefaultEngine.ini"}]}

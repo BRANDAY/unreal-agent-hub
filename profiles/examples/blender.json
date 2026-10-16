@@ -1,0 +1,11 @@
+{
+  "name": "blender",
+  "description": "Example (future): Blender projects. Renders, bakes and exports wait for the machine's GPU, shared with Unreal.",
+  "match": { "markers": ["*.blend"], "search": ["self", "parents", "children"] },
+  "busy": { "processes": ["blender"], "gpu": "nvidia-smi", "graceMin": 2, "busyAbove": { "gpuMemPct": 85 } },
+  "gates": [
+    { "tools": "^mcp__blender__(execute_blender_code|generate_3d)$", "resource": "@machine" },
+    { "commands": "blender(\\.exe)?\\s.*(-b|--background|--render|-f\\s)", "resource": "@machine" }
+  ],
+  "holdTtlMin": 60
+}

@@ -1,0 +1,1 @@
+{"conversation_id":"conv-42","generation_id":"gen-2","model":"auto","hook_event_name":"beforeMCPExecution","cursor_version":"2.4.0","workspace_roots":["/Users/me/game"],"user_email":"dev@example.com","tool_name":"call_tool","tool_input":"{\"toolset\":\"LevelTools\"}","mcp_server_name":"unreal-mcp","command":"node server.js"}

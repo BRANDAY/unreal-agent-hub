@@ -1,0 +1,9 @@
+{
+  "role": "node",
+  "id": "laptop",
+  "hubUrl": "http://127.0.0.1:18791",
+  "token": "the token printed by `hub node add laptop` on the hub",
+  "profile": "unreal",
+  "share": { "prompt": "clip160" },
+  "gateWaitSec": 1500
+}

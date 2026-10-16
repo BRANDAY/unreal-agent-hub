@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "unreal-agent-hub",
+  "version": "0.1.0",
+  "description": "A queue for shared resources of AI coding agents (Codex, Claude Code, Cursor) and scripts: the Unreal editor, C++ builds, cooks, GPU machines. Advisory locks with priorities, machine roles, presence and a live board.",
+  "author": { "name": "BRANDAY" },
+  "homepage": "https://github.com/BRANDAY/unreal-agent-hub",
+  "repository": "https://github.com/BRANDAY/unreal-agent-hub",
+  "license": "PolyForm-Small-Business-1.0.0",
+  "keywords": ["codex", "openai-codex", "claude-code", "cursor", "ai-agents", "multi-agent", "resource-lock", "mutex", "job-queue", "hooks", "dashboard", "ssh", "gamedev", "unreal-engine", "ue5", "mcp"],
+  "skills": "./skills/",
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json",
+      "interface": { "displayName": "Unreal Agent Hub" }
+    }
+  }
+}

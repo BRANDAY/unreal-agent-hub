@@ -1,0 +1,21 @@
+{
+  "name": "unreal",
+  "description": "Unreal Engine projects: a chat takes part when a *.uproject is in its folder, a parent or a direct child folder.",
+  "match": { "markers": ["*.uproject"], "search": ["self", "parents", "children"] },
+  "busy": {
+    "processes": ["UnrealEditor", "UnrealEditor-Cmd", "ShaderCompileWorker", "UnrealBuildTool", "*-Win64-Shipping", "*-Win64-Test", "*-Win64-Development", "*-Win64-DebugGame", "*-Linux-Shipping", "*-Mac-Shipping"],
+    "details": "unreal-editor",
+    "gpu": "nvidia-smi",
+    "graceMin": 3,
+    "busyAbove": { "gpuMemPct": 85, "cpuPct": 90 }
+  },
+  "gates": [
+    { "tools": "^mcp__unreal-mcp__", "resource": "@machine" },
+    { "commands": "UnrealEditor|UnrealBuildTool|RunUAT|Build\\.(bat|sh)|-(Win64|Linux|Mac)-(Shipping|Test|Development|DebugGame)", "resource": "@machine" }
+  ],
+  "holdTtlMin": 60,
+  "labels": {
+    "en": { "busy": "Unreal is running" }, "de": { "busy": "Unreal läuft" }, "fr": { "busy": "Unreal est ouvert" },
+    "it": { "busy": "Unreal è aperto" }, "es": { "busy": "Unreal está abierto" }, "ru": { "busy": "открыт Unreal" }
+  }
+}

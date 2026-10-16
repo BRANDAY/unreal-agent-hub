@@ -1,0 +1,8 @@
+{
+  "name": "generic",
+  "description": "No automatic gates: only explicit hub lock / hub hold / MCP holds. A chat takes part when its project has a .unreal-agent-hub.json.",
+  "match": { "markers": [".unreal-agent-hub.json"], "search": ["self", "parents"] },
+  "busy": { "processes": [], "gpu": false },
+  "gates": [],
+  "holdTtlMin": 60
+}

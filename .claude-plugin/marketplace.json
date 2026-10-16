@@ -1,0 +1,15 @@
+{
+  "name": "unreal-agent-hub",
+  "owner": { "name": "BRANDAY" },
+  "description": "Unreal Agent Hub: a queue for shared resources (Unreal editor, builds, cooks, GPU machines) of Claude Code, Codex and Cursor chats and scripts.",
+  "plugins": [
+    {
+      "name": "unreal-agent-hub",
+      "source": "./",
+      "description": "Advisory locks with priorities, machine roles, presence and handover requests, a live board on 127.0.0.1:8790, hooks and an MCP server.",
+      "version": "0.1.0",
+      "category": "development",
+      "tags": ["unreal-engine", "ue5", "gamedev", "multi-agent", "resource-lock", "job-queue", "dashboard"]
+    }
+  ]
+}

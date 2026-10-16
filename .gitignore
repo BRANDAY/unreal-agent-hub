@@ -1,0 +1,10 @@
+node_modules/
+*.tgz
+*.tmp
+*.new
+.DS_Store
+# ruflo / claude-flow per-project files
+.swarm/
+.claude-flow/
+# local scratch (hook records, notes)
+dev/

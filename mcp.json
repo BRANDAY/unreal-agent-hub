@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "unreal-agent-hub": { "type": "stdio", "command": "node", "args": ["${PLUGIN_ROOT}/bin/hub.cjs", "mcp"] }
+  }
+}

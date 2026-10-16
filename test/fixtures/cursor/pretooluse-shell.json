@@ -1,0 +1,1 @@
+{"conversation_id":"conv-42","generation_id":"gen-4","model":"auto","hook_event_name":"preToolUse","cursor_version":"2.4.0","workspace_roots":["/Users/me/game"],"tool_name":"Shell","tool_input":{"command":"npm install","working_directory":"/project"},"tool_use_id":"tu-1","cwd":"/project","agent_message":""}

@@ -1,0 +1,8 @@
+{
+  "name": "docker-gpu",
+  "description": "Example: GPU containers. A chat takes part when a docker-compose file is near; docker runs with --gpus wait for the machine.",
+  "match": { "markers": ["docker-compose.yml", "compose.yaml"], "search": ["self", "parents"] },
+  "busy": { "processes": ["python", "python3"], "gpu": "nvidia-smi", "busyAbove": { "gpuMemPct": 80, "gpuUtilPct": 90 } },
+  "gates": [ { "commands": "docker\\s+(run|compose\\s+up).*--gpus", "resource": "@machine" } ],
+  "holdTtlMin": 120
+}

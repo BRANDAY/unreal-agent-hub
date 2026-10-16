@@ -1,0 +1,11 @@
+{
+  "description": "Unreal Agent Hub: chat status for the board, and heavy work waits for its shared resource. Chats outside an Unreal (or configured) project exit at once.",
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
+    "PreToolUse": [{ "matcher": "Bash|PowerShell|mcp__.*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 1800, "statusMessage": "Unreal Agent Hub: waiting for a shared resource" }] }],
+    "Notification": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10, "async": true }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10, "async": true }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }]
+  }
+}

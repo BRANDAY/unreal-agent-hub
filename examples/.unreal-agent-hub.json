@@ -1,0 +1,13 @@
+{
+  "project": "MyGame",
+  "profile": "unreal",
+  "resources": [
+    { "id": "cook",   "scope": "project", "ttlMin": 180, "label": "Cook / Packaged", "icon": "cook" },
+    { "id": "smoke",  "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke" },
+    { "id": "editor", "scope": "project", "ttlMin": 30,  "label": "Editor restart",  "icon": "editor" }
+  ],
+  "gates": [
+    { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait" },
+    { "commands": "\\\\Packaged\\\\|remote_run\\.ps1|run_smoke", "resource": "@node:laptop" }
+  ]
+}

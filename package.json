@@ -1,0 +1,67 @@
+{
+  "name": "unreal-agent-hub",
+  "version": "0.1.0",
+  "description": "A queue for shared resources of AI coding agents (Claude Code, OpenAI Codex, Cursor) and scripts on one or many machines: the Unreal editor, C++ builds, cooks, GPU laptops. Advisory locks with priorities, machine roles, presence and a live board.",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "codex",
+    "openai-codex",
+    "cursor",
+    "ai-agents",
+    "multi-agent",
+    "resource-lock",
+    "mutex",
+    "job-queue",
+    "hooks",
+    "dashboard",
+    "ssh",
+    "gamedev",
+    "unreal-engine",
+    "ue5",
+    "mcp"
+  ],
+  "license": "PolyForm-Small-Business-1.0.0",
+  "author": "BRANDAY",
+  "homepage": "https://github.com/BRANDAY/unreal-agent-hub#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BRANDAY/unreal-agent-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BRANDAY/unreal-agent-hub/issues"
+  },
+  "bin": {
+    "hub": "bin/hub.cjs",
+    "unreal-agent-hub": "bin/hub.cjs"
+  },
+  "main": "lib/config.cjs",
+  "files": [
+    "bin/",
+    "lib/",
+    "web/",
+    "profiles/",
+    "ps/",
+    "hooks/",
+    "skills/",
+    "commands/",
+    ".claude-plugin/",
+    "plugin.json",
+    "mcp.json",
+    "examples/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "COMMERCIAL.md",
+    "CHANGELOG.md",
+    "CLA.md",
+    "CONTRIBUTING.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "board": "node bin/hub.cjs serve"
+  }
+}
