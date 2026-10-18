@@ -41,6 +41,9 @@ shows the queue.
 - **Locks that wait by themselves.** `hub lock cpp -- build.bat` waits its turn, runs, releases. Hooks make an
   agent's heavy tool calls (Unreal editor, UnrealBuildTool, RunUAT, `mcp__unreal-mcp__*`) wait the same way;
   after a timeout the call is denied with the holder's name, never forced through.
+- **One chat per shared file.** The first chat that edits a shared file (C++ sources, configs, your scripts) holds
+  it until its change is committed or merged into main; another chat's edit is refused with the holder's name.
+  Edits of what the build compiles wait while another chat builds or packages ([FILES](docs/FILES.md)).
 - **One protocol, any language.** Plain JSON files in `~/.unreal-agent-hub/state`, atomic create and
   rename-aside break, no mutex ([PROTOCOL](docs/PROTOCOL.md)). Node CLI, PowerShell module, MCP tools - all equal.
 - **Priorities without preemption.** A person at the machine > a chat on that machine > a chat's hold > scripts;
@@ -153,7 +156,8 @@ For every agent, paste [AGENTS.snippet.md](AGENTS.snippet.md) into the project's
 Three layers, merged: the machine (`~/.unreal-agent-hub/config.json`), the project (`.unreal-agent-hub.json`) and
 the plugin options. Everything - resources, nodes, priorities, aging, presence TTL, handover, what a node may
 share (`share.prompt`: `none`, `clip160`, `full`) - is in [CONFIG](docs/CONFIG.md); profiles that decide which
-chats take part and which calls are heavy are in [PROFILES](docs/PROFILES.md). Command line: [CLI](docs/CLI.md).
+chats take part and which calls are heavy are in [PROFILES](docs/PROFILES.md); which files are shared and which
+wait for the build, in [FILES](docs/FILES.md). Command line: [CLI](docs/CLI.md).
 
 ## FAQ
 
@@ -194,9 +198,9 @@ shared with Unreal. Blender jobs as queued work are planned after the first vers
 
 ## Project status
 
-Version 0.1.0, built and tested on Windows 11 with Node.js 24; macOS and Linux paths exist but are less tested.
+Version 0.1.1, built and tested on Windows 11 with Node.js 24; macOS and Linux paths exist but are less tested.
 Built and tested: the lock protocol (including two-process races), queue, handover, hooks for the three agents
-with documented payloads, board, MCP, PowerShell module. Not yet: on-demand probes over direct HTTP, the write side
+with documented payloads, board, MCP, PowerShell module, the file gate (claims, merge detection, build wait). Not yet: on-demand probes over direct HTTP, the write side
 of the folder transport, delivering notifications into a chat over Claude's messaging socket (they are queued),
 verification of the Codex plugin manifest and of plugin hooks on a live install. See [CHANGELOG](CHANGELOG.md).
 

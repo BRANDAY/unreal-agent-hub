@@ -11,11 +11,13 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | Command | What it does |
 |---|---|
 | `hub status [--json]` | Every resource with its holder, queue (in serving order, with effective priority) and handover requests |
-| `hub lock <res> [opts] -- <command...>` | Wait for `<res>`, run the command while holding it, release when it ends (like `flock`) |
+| `hub lock <res>[,<res>...] [opts] -- <command...>` | Wait for `<res>`, run the command while holding it, release when it ends (like `flock`). Several resources are taken in the order given |
 | `hub hold <res> [opts]` | Hold `<res>` for this chat until `hub release`, the end of the chat's agent process, or the TTL |
 | `hub release <res> [--force]` | Release a hold of this chat. `--force` releases anyone's; ask the owner first |
 | `hub break <res> [--force]` | Drop a stale lock. `--force` also drops a live one |
 | `hub here [<machine>] [--off] [--ttl N]` | Presence: "I am sitting at this machine" |
+| `hub claims [--json]` | Files claimed by chats through the file gate, held or over ([FILES.md](FILES.md)) |
+| `hub claims release <path>` | Free one claim by hand; ask its holder first |
 | `hub grant [<res or machine>] [--token T]` | Answer a handover request: yes, take it |
 | `hub decline [<res or machine>] [--token T]` | Answer a handover request: not now |
 | `hub serve [--port N] [--no-tunnels]` | Run the board ([BOARD.md](BOARD.md)) |
@@ -55,7 +57,10 @@ While waiting, a line is printed to stderr every minute: `[hub] <key> is busy: <
 hub lock cpp --note "Editor target" -- ./build.sh MyGameEditor
 hub lock role:runner --ttl 120 -- node run-smoke.js
 hub lock cook --no-wait -- python package.py     # exit 75 at once if busy
+hub lock cpp,cook --ttl 180 -- RunUAT.bat BuildCookRun -project=MyGame.uproject -cook -build -stage -pak
 ```
+
+- `cpp,cook` takes `cpp`, then `cook`, and releases them in reverse when the command ends. If one cannot be taken (`--no-wait`, `--wait-min`), the ones already taken are released and the exit code is 75. Keep one order everywhere (`cpp` before `cook`): a packaging run holds the build for its whole length because the cook loads the editor's modules ([FILES.md](FILES.md#packaging-holds-the-build-and-the-cook)).
 
 - Everything after `--` is the command. The hub puts the token into the child's environment as `UAH_TOKEN_<KEY>`, so a nested `hub lock` of the same resource passes through instead of waiting for itself.
 - The lock belongs to the `hub lock` process. If it dies, the lock is stale and the next taker removes it.

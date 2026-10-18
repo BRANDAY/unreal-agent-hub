@@ -13,6 +13,12 @@
     { "tools": "^mcp__unreal-mcp__", "resource": "@machine" },
     { "commands": "UnrealEditor|UnrealBuildTool|RunUAT|Build\\.(bat|sh)|-(Win64|Linux|Mac)-(Shipping|Test|Development|DebugGame)", "resource": "@machine" }
   ],
+  "files": {
+    "build": ["Source/**", "Plugins/**/Source/**", "Plugins/**/*.uplugin", "*.uproject", "**/*.Build.cs", "**/*.Target.cs"],
+    "buildResource": "cpp",
+    "claim": ["Config/*.ini"],
+    "free": ["**/*.md"]
+  },
   "holdTtlMin": 60,
   "labels": {
     "en": { "busy": "Unreal is running" }, "de": { "busy": "Unreal läuft" }, "fr": { "busy": "Unreal est ouvert" },

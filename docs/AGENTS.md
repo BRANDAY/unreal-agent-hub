@@ -29,6 +29,7 @@ Without `Notification` (Codex, Cursor) the board cannot show "needs you" from a 
 | folder | `cwd` (or `CLAUDE_PROJECT_DIR`) | `cwd`, else the first of `workspace_roots` |
 | tool | `tool_name` | `Shell` for `beforeShellExecution`; `mcp__<mcp_server_name>__<tool_name>` for `beforeMCPExecution` (so the same gates match); `tool_name` for `preToolUse` |
 | command | `tool_input.command` | `command` (shell hook) or `tool_input.command` (`preToolUse`, a JSON object or a string holding JSON) |
+| edited files | `tool_input.file_path`, `notebook_path` or `path`; for `apply_patch` the `*** Update/Add/Delete File:` and `*** Move to:` headers of the patch (then `command` is left empty) | the same, from `tool_input` of `preToolUse` |
 | prompt | `prompt` | `prompt` |
 | title | `session_title` | none |
 | notification | `notification_type`, `message` | none |
@@ -77,8 +78,8 @@ It writes the hub's entries into the agent's user settings, marks them by their 
 
 | Agent | File written | Entries |
 |---|---|---|
-| Claude Code | `~/.claude/settings.json` | `SessionStart` (10 s), `UserPromptSubmit` (10 s), `PreToolUse` matcher `Bash\|PowerShell\|mcp__.*` (1800 s, status message "waiting for a shared resource"), `Notification` (10 s, async), `Stop` (10 s, async), `SessionEnd` (10 s) |
-| Codex | `~/.codex/hooks.json` | `SessionStart`, `UserPromptSubmit` (10 s each), `PreToolUse` matcher `^(Bash\|shell\|mcp__.*)$` (1800 s), `Stop` (10 s), `SessionEnd` (3 s) |
+| Claude Code | `~/.claude/settings.json` | `SessionStart` (10 s), `UserPromptSubmit` (10 s), `PreToolUse` matcher `Bash\|PowerShell\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*` (1800 s, status message "waiting for a shared resource"), `Notification` (10 s, async), `Stop` (10 s, async), `SessionEnd` (10 s) |
+| Codex | `~/.codex/hooks.json` | `SessionStart`, `UserPromptSubmit` (10 s each), `PreToolUse` matcher `^(Bash\|shell\|apply_patch\|mcp__.*)$` (1800 s), `Stop` (10 s), `SessionEnd` (3 s) |
 | Cursor | `~/.cursor/hooks.json` (`{"version":1,"hooks":{...}}`) | `sessionStart`, `beforeSubmitPrompt`, `stop`, `sessionEnd` (10 s each), `beforeShellExecution`, `beforeMCPExecution` (1800 s) |
 
 Notes per agent:
@@ -86,7 +87,8 @@ Notes per agent:
 - Codex runs new hooks only after you trust them: open Codex and run `/hooks`. The command also prints the `[mcp_servers.unreal-agent-hub]` block for `~/.codex/config.toml`.
 - Cursor already reads `~/.claude/settings.json`. Install into `~/.cursor/hooks.json` only on a machine without the Claude Code hooks, otherwise the hooks run twice; the command warns if it finds the hub in the Claude file.
 - `install-hooks` installs hooks only. The MCP server is registered separately ([MCP.md](MCP.md)).
-- The Codex matcher uses the tool names `Bash` and `shell`; these names come from the authors' reading of Codex's hook documentation and are unverified on a live install.
+- File edits (`Edit`, `Write`, `MultiEdit`, `NotebookEdit`; Codex `apply_patch`) go through the file gate ([FILES.md](FILES.md)). For Cursor it is not installed.
+- The Codex matcher uses the tool names `Bash`, `shell` and `apply_patch`; these names come from the authors' reading of Codex's hook documentation and are unverified on a live install.
 
 ## Plugin manifests
 

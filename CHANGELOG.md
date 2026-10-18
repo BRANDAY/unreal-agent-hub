@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.1 - 2026-10-18
+
+Races between chats over files, from the same studio setup: two chats editing one file overwrote each other's
+lines, and a cook ran on editor binaries that another chat was rebuilding.
+
+- **File gate** (`lib/file-gate.cjs`, [docs/FILES.md](docs/FILES.md)) in the `PreToolUse` hook for file edits
+  (Claude Code `Edit`, `Write`, `MultiEdit`, `NotebookEdit`; Codex `apply_patch`):
+  - an edit of what the build compiles waits while another chat or script holds the build resource (`cpp`); the
+    chat's own build does not hold it back; after `gateWaitSec` the edit is denied with the holder's name;
+  - the first chat to edit a shared file claims it; another chat's edit is denied while the holder's changes are
+    uncommitted. A claim ends when the file is clean (after a 120 s grace for a pending edit), when a commit on a
+    main branch touching the file is at least as new as the holder's last edit (merged work, even if the file is
+    dirty again), or after `claimHours` without an edit. One claim file per path, created atomically: of two chats
+    claiming at once exactly one wins.
+  - Configured by a `files` block in the profile (the `unreal` profile ships one: sources, plugins, `.uproject`,
+    `*.Build.cs`, `*.Target.cs`, `Config/*.ini`; docs free) and in the project overlay (single keys replaced,
+    `false` turns it off).
+- `hub claims [--json]`, `hub claims release <path>`.
+- **Several resources in one lock:** `hub lock cpp,cook -- <command>` and `Invoke-HubLocked cpp, cook { ... }` take
+  them in the order given and release in reverse; a packaging run holds the build for its whole length.
+- Hook matchers (plugin `hooks/hooks.json`, `install-hooks` for Claude Code and Codex) now include the edit tools.
+- `gateWait` takes an `isMine` option; normalized hook events carry `files`.
+
+### Known limitations in 0.1.1
+
+- Edits through a shell (`sed -i`, scripts) are not seen by the file gate.
+- The file gate does not run on nodes (`role: node`), and Cursor's `preToolUse` is not installed by `install-hooks`.
+- The board does not show claims yet (`hub claims` does).
+- Codex `apply_patch` payloads are parsed from the patch headers; not verified on a live Codex install.
+
 ## 0.1.0 - 2026-10-16
 
 First version, extracted from a working in-house setup of one game studio and generalized.

@@ -8,4 +8,6 @@ This project shares the editor, C++ builds, cooks and test machines with other a
   (or `hub_hold` / `hub_release`).
 - "Resource ... is busy" means: do other work and try later. Never stop processes you did not start and
   never break another holder's lock.
+- "<file> is being edited by chat X" means: another chat holds that file until its change is committed. Ask
+  that chat to make the change or to commit; edit shared files with the edit tools, not through the shell.
 - Requests "may I take your machine?" are answered (`hub_grant` / `hub_decline`) only with the person's own words.

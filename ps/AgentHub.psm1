@@ -89,10 +89,18 @@ function Invoke-HubLocked {
     <#
     .SYNOPSIS
     Runs a script block while holding a resource: Invoke-HubLocked cook { & .\package.ps1 }
+    Several resources are taken in the order given and released in reverse:
+    Invoke-HubLocked cpp, cook { & .\package.ps1 } -TtlMin 180   # a packaging run holds the build and the cook
     #>
-    param([Parameter(Mandatory, Position = 0)][string]$Resource, [Parameter(Mandatory, Position = 1)][scriptblock]$Body, [string]$Note = '', [switch]$NoWait)
-    $h = Enter-HubLock $Resource -Note $Note -NoWait:$NoWait
-    try { & $Body } finally { Exit-HubLock $h }
+    param([Parameter(Mandatory, Position = 0)][string[]]$Resource, [Parameter(Mandatory, Position = 1)][scriptblock]$Body,
+          [string]$Note = '', [switch]$NoWait, [int]$TtlMin = 0)
+    $held = New-Object System.Collections.ArrayList
+    try {
+        foreach ($r in $Resource) { [void]$held.Add((Enter-HubLock $r -Note $Note -NoWait:$NoWait -TtlMin $TtlMin)) }
+        & $Body
+    } finally {
+        for ($i = $held.Count - 1; $i -ge 0; $i--) { Exit-HubLock $held[$i] }
+    }
 }
 
 Export-ModuleMember -Function Enter-HubLock, Exit-HubLock, Get-HubStatus, Invoke-HubLocked

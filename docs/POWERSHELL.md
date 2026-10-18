@@ -56,13 +56,23 @@ Returns the parsed output of `hub status --json`: one object per resource with `
 Get-HubStatus | Where-Object { $_.holder } | Select-Object key, @{n='who';e={ $_.holder.text }}
 ```
 
-### `Invoke-HubLocked <Resource> <ScriptBlock> [-Note] [-NoWait]`
+### `Invoke-HubLocked <Resource[]> <ScriptBlock> [-Note] [-NoWait] [-TtlMin]`
 
 Takes the resource, runs the block, and always releases:
 
 ```powershell
 Invoke-HubLocked cook { & .\Tools\package.ps1 } -Note "nightly"
 ```
+
+Several resources are taken in the order given and released in reverse; if one cannot be taken, the ones already
+taken are released before the error comes out. A packaging run holds the build for its whole length, because the
+cook loads the editor's modules ([FILES.md](FILES.md#packaging-holds-the-build-and-the-cook)):
+
+```powershell
+Invoke-HubLocked cpp, cook { & .\Tools\package.ps1 } -TtlMin 180   # always cpp before cook
+```
+
+The same by hand: `$cpp = Enter-HubLock cpp -TtlMin 180; $cook = Enter-HubLock cook; try { ... } finally { Exit-HubLock $cook; Exit-HubLock $cpp }`.
 
 ## Nesting
 

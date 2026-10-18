@@ -11,11 +11,13 @@ const HELP = `Unreal Agent Hub - a queue for shared resources of AI coding agent
 Usage: hub <command> [options]
 
   status [--json]                         who holds what, who waits, handover requests
-  lock <res> [opts] -- <command...>       run a command while holding <res> (like flock)
+  lock <res>[,<res>...] [opts] -- <cmd>  run a command while holding <res> (like flock); several are taken
+                                          in the order given ("cpp,cook": a packaging run holds both)
   hold <res> [opts]                       hold <res> for this chat until release / its agent exits / TTL
   release <res> [--force]                 release a hold of this chat (--force: anyone's)
   break <res> [--force]                   drop a stale lock (--force: also a live one; ask its owner first)
   here [<machine>] [--off] [--ttl N]      "I am sitting at this machine" (presence)
+  claims [--json] | claims release <path> files claimed by chats (file gate); release frees one by hand
   grant [<res|machine>] [--token T]       answer a handover request: "yes, take it"
   decline [<res|machine>] [--token T]     answer a handover request: "not now"
   serve [--port N] [--no-tunnels]         run the board (http://127.0.0.1:8790)
@@ -92,20 +94,30 @@ async function main() {
       return print(a.json ? JSON.stringify(d, null, 2) : S.format(d));
     }
     case 'lock': {
-      const res = a._[0];
-      if (!res || !a.rest.length) die('usage: hub lock <resource> [options] -- <command...>');
+      const names = String(a._[0] || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (!names.length || !a.rest.length) die('usage: hub lock <resource>[,<resource>...] [options] -- <command...>');
       const st = store(cfg);
-      const r = await client.acquire(cfg, st, res, acquireOpts(a, { mode: 'script', script: path.basename(a.rest[0]), command: a.rest.join(' ') }));
-      if (!r.ok) die(r.error, 75);
-      if (!r.reentrant && !r.presence) process.stderr.write(`[hub] took ${r.key}${r.waitedMs > 6000 ? ` after ${(r.waitedMs / 60e3).toFixed(1)} min` : ''}.\n`);
-      const env = Object.assign({}, process.env, { [client.tokenEnv(r.key)]: r.token });
+      // Several resources are taken one after another in the order given and released in reverse. Keep one order
+      // everywhere (cpp before cook) and two such commands never wait on each other.
+      const held = [];
+      const env = Object.assign({}, process.env);
+      for (const res of names) {
+        const r = await client.acquire(cfg, st, res, acquireOpts(a, { mode: 'script', script: path.basename(a.rest[0]), command: a.rest.join(' '), env }));
+        if (!r.ok) {
+          for (const h of held.reverse()) if (!h.reentrant && !h.presence) client.release(cfg, st, h.key, h.token, 'lock not completed');
+          die(r.error, 75);
+        }
+        if (!r.reentrant && !r.presence) process.stderr.write(`[hub] took ${r.key}${r.waitedMs > 6000 ? ` after ${(r.waitedMs / 60e3).toFixed(1)} min` : ''}.\n`);
+        env[client.tokenEnv(r.key)] = r.token;
+        held.push(r);
+      }
       // On Windows the command goes through cmd.exe (so .cmd/.bat and built-ins work), as one quoted string.
       const win = process.platform === 'win32';
       const quote = s => (/^[\w@%+=:,./\\-]+$/.test(s) ? s : `"${String(s).replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`);
       const child = win
         ? require('child_process').spawn(a.rest.map(quote).join(' '), { stdio: 'inherit', env, shell: true })
         : require('child_process').spawn(a.rest[0], a.rest.slice(1), { stdio: 'inherit', env });
-      const free = () => { if (!r.reentrant && !r.presence) client.release(cfg, st, r.key, r.token, 'command finished'); };
+      const free = () => { for (const h of held.slice().reverse()) if (!h.reentrant && !h.presence) client.release(cfg, st, h.key, h.token, 'command finished'); };
       for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { child.kill(sig); } catch (_) {} });
       child.on('error', e => { free(); die(String(e.message || e), 127); });
       child.on('exit', (code, sig) => { free(); process.exit(code == null ? (sig ? 1 : 0) : code); });
@@ -163,6 +175,19 @@ async function main() {
       if (!a.force) die(`${key} is live: ${describe(lock)}. Only --force drops a live lock; ask its owner first. Nothing here stops processes.`);
       const r = st.forceBreak(key, 'hub break --force');
       return print(r.ok ? `broke the lock of ${describe(lock)}` : `not broken: ${r.error}`);
+    }
+    case 'claims': {
+      const FG = require('../lib/file-gate.cjs');
+      if (a._[0] === 'release') {
+        if (!a._[1]) die('usage: hub claims release <path>');
+        const r = FG.release(cfg, a._[1], process.cwd(), store(cfg));
+        if (!r.ok) die(r.error);
+        return print(`released ${r.claim.rel || r.claim.file} (was "${r.claim.chat || r.claim.session}")`);
+      }
+      const list = FG.list(cfg);
+      if (a.json) return print(JSON.stringify(list, null, 2));
+      if (!list.length) return print('no claimed files');
+      return print(list.map(c => `${c.active ? 'held' : `over (${c.why})`}  ${c.rel || c.file}  ${c.chat || c.session}  since ${U.hm(c.since)}, last edit ${U.hm(c.at)}`).join('\n'));
     }
     case 'here': {
       const r = require('../lib/presence.cjs').here(cfg, store(cfg), a._[0], !a.off, { ttlMin: a.ttl ? Number(a.ttl) : undefined, by: 'hub here' });

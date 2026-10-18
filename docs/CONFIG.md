@@ -112,6 +112,7 @@ Profile contents are described in [PROFILES.md](PROFILES.md).
 | `resources` | Project-scope resources (same fields as above; `scope` defaults to `project`) |
 | `gates` | Extra gate rules added to the profile's gates ([PROFILES.md](PROFILES.md)) |
 | `profile` | Force a profile for this project |
+| `files` | File gate settings on top of the profile's, single keys replaced; `false` turns the gate off ([FILES.md](FILES.md)) |
 
 A `labels` key is read into the configuration but nothing uses it yet. The hub remembers every overlay it has seen in `state/projects/<id>.json`, so the board lists a project's resources even before anyone takes one.
 

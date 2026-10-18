@@ -20,6 +20,9 @@ make heavy calls wait by themselves. What this chat should do:
 4. **When a call was denied with "Resource ... is busy":** do other work and try later. Never stop, kill or
    close processes you did not start, and never break someone else's lock; `hub break --force` exists only
    for the owner of that work.
+   **"... is being edited by chat X":** another chat holds that file until its change is committed. Ask that
+   chat (or the person) to make the change or to commit; do not route around it with shell edits, and
+   `hub claims release` only at the person's word. Edit shared files with the edit tools, not `sed -i`.
 5. **Someone else's machine:** if a person sits at the machine you need, your run waits and the board asks
    them. Answer a request with `hub_grant` / `hub_decline` **only** when the person said so in this chat
    ("yes, take it" / "not now"); never decide for them.
