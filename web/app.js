@@ -313,7 +313,11 @@
     const [state, setState] = useState(null);
     const [live, setLive] = useState(false);
     const [now, setNow] = useState(Date.now());
-    const [win, setWin] = useState(() => +store.get('hub.win', 3 * 3600e3) || 3 * 3600e3);
+    // ?win=1|3|12|24 (hours) picks the timeline window for a link or a screenshot; otherwise the last choice.
+    const [win, setWin] = useState(() => {
+      const h = +new URLSearchParams(location.search).get('win');
+      return [1, 3, 12, 24].includes(h) ? h * 3600e3 : +store.get('hub.win', 3 * 3600e3) || 3 * 3600e3;
+    });
     const [all, setAll] = useState(false);
     const [tip, setTip] = useState(null);
     const [toast, setToast] = useState(null);

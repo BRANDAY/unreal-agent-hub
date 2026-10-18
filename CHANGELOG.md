@@ -22,6 +22,12 @@ lines, and a cook ran on editor binaries that another chat was rebuilding.
   them in the order given and release in reverse; a packaging run holds the build for its whole length.
 - Hook matchers (plugin `hooks/hooks.json`, `install-hooks` for Claude Code and Codex) now include the edit tools.
 - `gateWait` takes an `isMine` option; normalized hook events carry `files`.
+- Windows: `writeJson` retries a rename over a file that another process holds for a moment (`EPERM`, `EACCES`,
+  `EBUSY`, up to about 3 s); seen as a rare failure when a claim or lock made by `createExclusive` was rewritten
+  while the antivirus was still scanning it.
+- Board: `?win=1|3|12|24` in the address picks the timeline window (for links and screenshots).
+- `examples/demo.cjs` plays a busy day: nine chats, every task runs the pipeline build -> cook (holding the build)
+  -> smoke test, and queues while a stage is taken. New screenshot of the 24 h timeline in the README.
 
 ### Known limitations in 0.1.1
 

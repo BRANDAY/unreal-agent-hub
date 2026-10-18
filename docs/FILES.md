@@ -107,6 +107,11 @@ hub lock cpp,cook --ttl 180 -- RunUAT.bat BuildCookRun -project=MyGame.uproject 
 Invoke-HubLocked cpp, cook { & .\Tools\package.ps1 } -TtlMin 180
 ```
 
+On the board such a run shows as one colour across both rows, and the next task's build waits (hatched) until the
+cook is done:
+
+![Build, cook holding the build, smoke test - one colour per task](images/timeline-pipeline.jpg)
+
 Several resources are taken one after another in the order given and released in reverse. Keep one order
 everywhere (`cpp` before `cook`) and two scripts never wait on each other.
 

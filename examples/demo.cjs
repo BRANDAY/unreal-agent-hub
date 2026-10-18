@@ -50,36 +50,49 @@ const chats = [
   { session: 'b2e1d3c5-2222', title: 'Fix the cook crash in the shader cache', agent: 'codex' },
   { session: 'c3d2e4f6-3333', title: 'Smoke tests for the loading screen', agent: 'claude', host: 'local_91b4d7e0-bbbb' },
   { session: 'd4e3f5a7-4444', title: 'Retarget the run animations', agent: 'cursor' },
+  { session: 'e6a1b2c3-6666', title: 'Night sky and fog in the old town', agent: 'claude' },
+  { session: 'f7b2c3d4-7777', title: 'Door portals between the levels', agent: 'claude' },
+  { session: 'a8c3d4e5-8888', title: 'AI patrol routes in the maze', agent: 'codex' },
+  { session: 'b9d4e5f6-9999', title: 'Main menu settings page', agent: 'claude' },
+  { session: 'cae5f6a7-aaaa', title: 'Footstep sounds on wet stone', agent: 'cursor' },
 ];
 const events = [];
 const ev = (t, kind, res, tok, c, extra) => events.push(Object.assign({ t, kind, res, token: tok, mode: 'script', chat: c ? c.title : '', session: c ? c.session : '', agent: c ? c.agent : '', script: '', note: '' }, extra || {}));
 let seed = 7;
 const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-const plan = [['cpp', 'build.ps1'], ['studio-MyGame~cook', 'package.ps1'], ['MyGame~smoke', 'run_smoke.ps1'], ['MyGame~editor', 'editor.ps1'], ['laptop', 'remote_run.ps1']];
-for (const [res0, script] of plan) {
-  const res = res0 === 'studio-MyGame~cook' ? 'MyGame~cook' : res0;
-  let t = now - 24 * 60 * min;
-  while (t < now - 40 * min) {
-    t += (20 + rnd() * 90) * min;
-    const c = chats[Math.floor(rnd() * chats.length)];
-    const len = (3 + rnd() * (res === 'MyGame~cook' ? 40 : 18)) * min;
-    const tok = U.rand(4);
-    if (rnd() < 0.35) { const w = U.rand(4); ev(t - 6 * min, 'WAIT', res, w, chats[(chats.indexOf(c) + 1) % 4], { script }); ev(t + len, 'GO', res, w, null); }
-    ev(t, 'TAKE', res, tok, c, { script, note: res === 'laptop' ? 'smoke: loading' : '' });
-    ev(t + len, 'FREE', res, tok, c);
-    t += len;
-  }
+
+// A busy day: every task runs the same pipeline - C++ build, cook (which holds the build too), smoke test on the
+// laptop - and queues whenever a stage is taken. Editor restarts come in between.
+const SCRIPT = { cpp: 'build.ps1', 'MyGame~cook': 'package.ps1', 'MyGame~smoke': 'run_smoke.ps1', 'MyGame~editor': 'editor.ps1', laptop: 'remote_run.ps1' };
+const freeAt = {};
+const chatBusy = new Map();
+const stage = (res, c, asked, len, also) => {
+  const keys = [res, ...(also || [])];
+  const start = Math.max(asked, ...keys.map(k => freeAt[k] || 0));
+  const script = SCRIPT[res];
+  if (start > asked + 30e3) for (const k of keys) { const w = U.rand(4); ev(asked, 'WAIT', k, w, c, { script }); ev(start, 'GO', k, w, null); }
+  for (const k of keys) { const tok = U.rand(4); ev(start, 'TAKE', k, tok, c, { script, note: k === 'laptop' ? 'smoke: loading' : '' }); ev(start + len, 'FREE', k, tok, c); freeAt[k] = start + len + min; }
+  return start + len;
+};
+for (let t = now - 24 * 60 * min; t < now - 40 * min; t += (22 + rnd() * 30) * min) {
+  const c = chats[Math.floor(rnd() * chats.length)];
+  let at = stage('cpp', c, t, (4 + rnd() * 9) * min);
+  if (rnd() < 0.7) at = stage('MyGame~cook', c, at + (1 + rnd() * 3) * min, (12 + rnd() * 25) * min, ['cpp']);
+  if (rnd() < 0.8) at = stage(rnd() < 0.5 ? 'laptop' : 'MyGame~smoke', c, at + (1 + rnd() * 2) * min, (5 + rnd() * 14) * min);
+  if (rnd() < 0.45) stage('MyGame~editor', chats[Math.floor(rnd() * chats.length)], t + rnd() * 20 * min, (1 + rnd() * 6) * min);
+  chatBusy.set(c, (chatBusy.get(c) || []).concat([[t - (2 + rnd() * 10) * min, at + rnd() * 8 * min]]));
 }
 for (const c of chats) {
-  let t = now - 24 * 60 * min;
-  while (t < now - 30 * min) {
-    t += (15 + rnd() * 70) * min;
-    events.push({ t, session: c.session, title: c.title, agent: c.agent, event: 'UserPromptSubmit', state: 'working' });
-    t += (4 + rnd() * 25) * min;
-    events.push({ t, session: c.session, title: c.title, agent: c.agent, event: 'Stop', state: rnd() < 0.15 ? 'needs-owner' : 'idle' });
+  const spans = chatBusy.get(c) || [];
+  for (const [i, [a, b]] of spans.entries()) {
+    events.push({ t: a, session: c.session, title: c.title, agent: c.agent, event: 'UserPromptSubmit', state: 'working' });
+    events.push({ t: b, session: c.session, title: c.title, agent: c.agent, event: 'Stop', state: i < spans.length - 1 && rnd() < 0.12 ? 'needs-owner' : 'idle' });
   }
 }
-const lockEvents = events.filter(e => e.kind).sort((a, b) => a.t - b.t);
+// The history ends a few minutes ago: nothing starts later, and what is still running then ends there.
+const late = new Set(events.filter(e => (e.kind === 'TAKE' || e.kind === 'WAIT') && e.t > now - 5 * min).map(e => e.token));
+for (const e of events) if (e.t > now - min) e.t = now - min;
+const lockEvents = events.filter(e => e.kind && !late.has(e.token)).sort((a, b) => a.t - b.t);
 const chatEvents = events.filter(e => !e.kind).sort((a, b) => a.t - b.t);
 fs.writeFileSync(path.join(dir, 'events.jsonl'), lockEvents.map(e => JSON.stringify(e)).join('\n') + '\n');
 fs.writeFileSync(path.join(dir, 'chats.jsonl'), chatEvents.map(e => JSON.stringify(e)).join('\n') + '\n');
@@ -93,6 +106,7 @@ chatRec(chats[0], 'working', { lastPrompt: 'Bake the lighting for the harbor lev
 chatRec(chats[1], 'working', { lastPrompt: 'The cook dies in FShaderCodeLibrary - find why and fix it, then cook again' });
 chatRec(chats[2], 'needs-owner', { notice: 'Claude needs your permission to use PowerShell' });
 chatRec(chats[3], 'idle', { lastPrompt: 'Retarget the run cycle from the reference skeleton', machine: 'laptop', node: 'laptop' });
+for (const c of chats.slice(4)) chatRec(c, 'idle', { lastPrompt: c.title });
 U.writeJson(path.join(dir, 'chats', 'e5f4a6b8-5555.json'), { session: 'e5f4a6b8-5555', title: 'Profile the laptop at Medium', agent: 'claude', machine: 'laptop', node: 'laptop', project: 'MyGame', state: 'working', updated: now - 2 * min, lastPrompt: 'Measure the frame time on the laptop' });
 
 const take = (key, rec, ago) => {
@@ -104,7 +118,7 @@ const take = (key, rec, ago) => {
   U.writeJson(store.lockFile(key), l);
   return r;
 };
-take('cpp', { mode: 'script', chat: chats[1].title, session: chats[1].session, agent: 'codex', script: 'build.ps1', note: 'DreamGameEditor Development', ttlMin: 90 }, 7);
+take('cpp', { mode: 'script', chat: chats[1].title, session: chats[1].session, agent: 'codex', script: 'build.ps1', note: 'MyGameEditor Development', ttlMin: 90 }, 7);
 take('MyGame~cook', { mode: 'hold', chat: chats[0].title, session: chats[0].session, agent: 'claude', hostSession: chats[0].host, script: 'hub hold', note: 'cook, then copy to the laptop', ttlMin: 180 }, 38);
 store.writeWaiter('MyGame~cook', { token: U.rand(4), mode: 'script', chat: chats[2].title, session: chats[2].session, agent: 'claude', pid: process.pid, script: 'package.ps1', since: now - 12 * min });
 store.writeWaiter('cpp', { token: U.rand(4), mode: 'gate', chat: chats[0].title, session: chats[0].session, agent: 'claude', pid: process.pid, script: 'Bash: UnrealBuildTool', since: now - 3 * min });

@@ -64,6 +64,17 @@ shows the queue.
   fail open, nothing that stops processes ([SECURITY](docs/SECURITY.md)).
 - **No dependencies.** Node.js >= 18, nothing from npm at runtime; React and htm are vendored for the board.
 
+### A busy day on the board
+
+Nine chats share one build machine and a laptop. Every task runs the same pipeline: C++ build, cook (which keeps
+holding the build), smoke test on the laptop. One colour is one chat; hatched bars are a stage waiting its turn.
+
+![Three hours: each colour walks build -> cook -> smoke, and waits (hatched) while the stage ahead is taken](docs/images/timeline-pipeline.jpg)
+
+![24 hours of the same: resource rows, chat rows (blue working, red needs you) and the load of each resource](docs/images/timeline-day.jpg)
+
+Made-up data from `node examples/demo.cjs` (open `http://127.0.0.1:8791/?win=24`).
+
 ## How it works
 
 ```mermaid
