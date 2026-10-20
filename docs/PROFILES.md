@@ -46,6 +46,7 @@ Profiles are plain JSON, loaded from the package folders `profiles/` and `profil
 | `busy.busyAbove` | Load thresholds that make a machine busy even with no process: `gpuMemPct`, `gpuUtilPct`, `cpuPct`. Any one crossing is enough |
 | `gates[]` | Gate rules, below |
 | `files` | The file gate: which files wait for the build and which are claimed by one chat ([FILES.md](FILES.md)) |
+| `watch` | The project app (the editor): its port, process, log and clean-exit text, for the restart gate and the watchdog ([WATCH.md](WATCH.md)) |
 | `holdTtlMin` | TTL for holds taken by the profile's gates and by node chats; falls back to `holdTtlMin` of the machine config |
 | `labels` | Per-language texts. Data only: the current board does not read them |
 

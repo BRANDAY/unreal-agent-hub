@@ -9,5 +9,7 @@
   "gates": [
     { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait" },
     { "commands": "\\\\Packaged\\\\|remote_run\\.ps1|run_smoke", "resource": "@node:laptop" }
-  ]
+  ],
+  "files": { "claim": ["Config/*.ini", "Scripts/**", "Tools/**"], "free": ["**/*.md", "Config/DefaultGame.ini"] },
+  "watch": { "start": ["powershell", "-NoProfile", "-File", "Tools/editor.ps1"] }
 }

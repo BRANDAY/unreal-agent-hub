@@ -33,6 +33,10 @@ Different files stay free, also inside one folder. A claim ends by itself when:
   `origin/main`, `origin/master`; missing ones are skipped), is at least as new as the holder's last edit. The
   holder's work is merged, even if the file is dirty again from someone else. A task branch counts once it is
   merged;
+- the holder chat is **closed or silent** and a commit on one of the **`claimBranches`** (for example `task/*`, in a
+  workflow where each chat commits to its own branch without a checkout) touches the file after its last edit. Closed
+  or silent: no chat record, the record says ended (`SessionEnd`), its agent process is gone, or no event for
+  `quietMin` (20) minutes; a chat that is still working, even on other files, never counts as silent;
 - the holder has not edited the file for **`claimHours`** (6).
 
 The holder's next edit takes the claim over again with a fresh time; any other chat takes over a claim that has
@@ -60,6 +64,8 @@ replaces single keys on top of it, and `"files": false` turns the gate off for t
 | `claim` | `[]` | Other shared files that are claimed but do not wait for the build |
 | `free` | `[]` | Never claimed and never waiting, even if `build` or `claim` match (notes every chat appends to, a version file every chat bumps) |
 | `claimHours` | `6` | A claim without an edit by its holder for this long ends |
+| `claimBranches` | `[]` | Branch globs (`task/*`): a commit there after the holder's last edit ends the claim once the holder chat is closed or silent |
+| `quietMin` | `20` | A holder chat with no event for this long counts as silent |
 | `cleanGraceSec` | `120` | A claim on a clean file stays this long after the holder's last edit |
 | `mergedInto` | `["main","master","origin/main","origin/master"]` | Branches whose commits end a claim |
 

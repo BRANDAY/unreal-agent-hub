@@ -153,6 +153,34 @@ test('claim: ends after claimHours without an edit, and `release` frees it by ha
   rm(t.home); rm(dir);
 });
 
+test('claim: a closed or silent holder whose work is committed to a task branch lets go; a live one does not', async () => {
+  const t = setup();
+  const { dir, store } = t;
+  fs.writeFileSync(path.join(dir, '.unreal-agent-hub.json'), JSON.stringify({ project: 'Game', files: Object.assign({}, FILES, { claimBranches: ['task/*'] }) }));
+  const cfg = C.load({ env: { UAH_HOME: t.home }, cwd: dir });
+  const match = C.profileFor(cfg, dir);
+  const chats = require('../lib/chats.cjs');
+  const now = Date.now();
+  chats.update(cfg, 'sess-A', { title: 'chat A', state: 'working' });
+  await FG.check(cfg, match.profile, match, edit(dir, 'Tools/run.py'), A, { store, client, now: now - 300e3 });
+  touch(dir, 'Tools/run.py');
+  // The holder commits its file to task/a without a checkout (a commit object on the branch, main untouched).
+  sh(dir, ['branch', 'task/a']);
+  const blob = sh(dir, ['hash-object', '-w', 'Tools/run.py']).trim();
+  const idx = path.join(dir, '.git', 'index-task');
+  sh(dir, ['read-tree', 'task/a'], { GIT_INDEX_FILE: idx });
+  sh(dir, ['update-index', '--cacheinfo', `100644,${blob},Tools/run.py`], { GIT_INDEX_FILE: idx });
+  const treeId = sh(dir, ['write-tree'], { GIT_INDEX_FILE: idx }).trim();
+  const commit = sh(dir, ['commit-tree', treeId, '-p', 'task/a', '-m', 'A on its branch'], { GIT_COMMITTER_DATE: new Date(now - 100e3).toISOString() }).trim();
+  sh(dir, ['update-ref', 'refs/heads/task/a', commit]);
+  assert.ok(sh(dir, ['status', '--porcelain']).includes('run.py'), 'main is still dirty');
+  assert.equal((await FG.check(cfg, match.profile, match, edit(dir, 'Tools/run.py'), B, { store, client, now })).ok, false, 'holder alive: still held');
+  chats.update(cfg, 'sess-A', { state: 'ended' });
+  assert.equal((await FG.check(cfg, match.profile, match, edit(dir, 'Tools/run.py'), B, { store, client, now })).ok, true, 'holder closed and committed: free');
+  assert.match(fs.readFileSync(path.join(cfg.stateDir, 'log.txt'), 'utf8'), /CLAIMTAKE Tools\/run\.py by chat B \(was chat A, committed, holder gone\)/);
+  rm(t.home); rm(dir);
+});
+
 test('two chats claiming one file at the same moment: exactly one wins', async () => {
   const t = setup();
   const { cfg, profile, match, store, dir } = t;

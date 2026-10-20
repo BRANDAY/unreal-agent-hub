@@ -18,6 +18,7 @@ Usage: hub <command> [options]
   break <res> [--force]                   drop a stale lock (--force: also a live one; ask its owner first)
   here [<machine>] [--off] [--ttl N]      "I am sitting at this machine" (presence)
   claims [--json] | claims release <path> files claimed by chats (file gate); release frees one by hand
+  watch [status|down|up] [--note TEXT]    the project app (editor): state; down = closed by a chat, comes back
   grant [<res|machine>] [--token T]       answer a handover request: "yes, take it"
   decline [<res|machine>] [--token T]     answer a handover request: "not now"
   serve [--port N] [--no-tunnels]         run the board (http://127.0.0.1:8790)
@@ -161,6 +162,26 @@ async function main() {
       if (!client.isMineFn(key, who)(lock) && !a.force) die(`${key} is held by ${require('../lib/store.cjs').describe(lock)}, not by this chat. --force releases it anyway; ask its owner first.`);
       const r = client.release(cfg, st, key, lock.token, a.force ? 'released by hand (--force)' : 'released');
       return print(r.ok ? `released ${key}` : `could not release ${key}: ${r.error}`);
+    }
+    case 'watch': {
+      const W = require('../lib/watch.cjs');
+      const match = C.profileFor(cfg, process.cwd());
+      const profile = (match && match.profile) || cfg.profiles[cfg.profile] || {};
+      const w = W.settings(cfg, profile, match);
+      if (!w) die('no `watch` settings for this folder (a profile or .unreal-agent-hub.json with watch.port)');
+      W.remember(cfg, w);
+      const sub = a._[0] || 'status';
+      if (sub === 'down') {
+        const who = client.identity(cfg, { chat: a.chat });
+        W.markDown(cfg, w.project, { by: who.chat || (typeof a.note === 'string' ? a.note : '') || 'a script', session: who.session, note: typeof a.note === 'string' ? a.note : '' });
+        return print(`${w.project}: marked as closed by a chat - calls wait for it and the board's watchdog starts it again when nothing holds ${w.busyKeys.join(', ') || 'a resource'}`);
+      }
+      if (sub === 'up') { W.markUp(cfg, w.project); return print(`${w.project}: marked as up`); }
+      if (sub !== 'status') die('usage: hub watch [status|down|up] [--note TEXT]');
+      const alive = await W.portAlive(w.port);
+      const why = alive ? null : W.restartPending(cfg, store(cfg), w);
+      return print(`${w.project}: port ${w.port} ${alive ? 'answers' : why ? `is dead, restart under way: ${why}` : 'is dead, nothing restarting it'}` +
+        `; watchdog ${w.start ? `starts it with: ${[].concat(w.start).join(' ')}` : 'off (no watch.start)'}`);
     }
     case 'break': {
       const res = a._[0];

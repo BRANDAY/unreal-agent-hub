@@ -19,6 +19,14 @@
     "claim": ["Config/*.ini"],
     "free": ["**/*.md"]
   },
+  "watch": {
+    "port": 8000,
+    "tools": "^mcp__unreal-mcp__",
+    "processes": ["UnrealEditor"],
+    "log": "Saved/Logs/{marker}.log",
+    "cleanExit": "Log file closed|LogExit: Exiting",
+    "busy": ["cpp", "cook", "editor"]
+  },
   "holdTtlMin": 60,
   "labels": {
     "en": { "busy": "Unreal is running" }, "de": { "busy": "Unreal läuft" }, "fr": { "busy": "Unreal est ouvert" },

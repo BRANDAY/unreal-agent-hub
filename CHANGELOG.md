@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 - 2026-10-20
+
+Catching up with the studio setup the hub comes from (there is no 0.2.x). Editor restarts no longer break the other
+chats, and a file claim no longer outlives a chat that is closed.
+
+- **Watch** (`lib/watch.cjs`, [docs/WATCH.md](docs/WATCH.md)), configured by a `watch` block in the profile (the
+  `unreal` profile: MCP port 8000, `UnrealEditor`, `Saved/Logs/{marker}.log`, clean-exit text, busy `cpp`/`cook`/
+  `editor`) and the project overlay (`start`):
+  - `hub watch down` / `hub watch up` / `hub watch`: a chat's close script marks the editor as "closed by a chat,
+    it comes back";
+  - the `PreToolUse` hook holds an agent's MCP call while the port is dead and a restart is under way (a busy
+    resource held, the marker up, or the watchdog starting it); down with none of these it goes on as before;
+  - the board's watchdog (every 30 s) starts the app with `watch.start` when a chat closed it or its log has no
+    clean exit, never while a busy resource was held in the last 2 min, never after a clean close by hand, at most
+    twice an hour. `UAH_WATCH=0` turns it off.
+- **File gate:** `claimBranches` (for example `task/*`) and `quietMin`: a claim ends once its holder chat is closed or
+  silent (no record, ended, agent process gone, or 20 min without an event) and a commit on such a branch touched
+  the file after the holder's last edit. For workflows where every chat commits to its own branch without a
+  checkout.
+- Tests 41 (7 new).
+
 ## 0.1.1 - 2026-10-18
 
 Races between chats over files, from the same studio setup: two chats editing one file overwrote each other's

@@ -44,6 +44,9 @@ shows the queue.
 - **One chat per shared file.** The first chat that edits a shared file (C++ sources, configs, your scripts) holds
   it until its change is committed or merged into main; another chat's edit is refused with the holder's name.
   Edits of what the build compiles wait while another chat builds or packages ([FILES](docs/FILES.md)).
+- **Editor restarts that don't break the other chats.** While one chat restarts the editor (its MCP server), the
+  other chats' MCP calls wait instead of hitting a dead port; an editor a chat closed or that crashed is opened again
+  by the board, never during a build and never after a person closed it ([WATCH](docs/WATCH.md)).
 - **One protocol, any language.** Plain JSON files in `~/.unreal-agent-hub/state`, atomic create and
   rename-aside break, no mutex ([PROTOCOL](docs/PROTOCOL.md)). Node CLI, PowerShell module, MCP tools - all equal.
 - **Priorities without preemption.** A person at the machine > a chat on that machine > a chat's hold > scripts;
@@ -209,7 +212,7 @@ shared with Unreal. Blender jobs as queued work are planned after the first vers
 
 ## Project status
 
-Version 0.1.1, built and tested on Windows 11 with Node.js 24; macOS and Linux paths exist but are less tested.
+Version 0.3.0, built and tested on Windows 11 with Node.js 24; macOS and Linux paths exist but are less tested.
 Built and tested: the lock protocol (including two-process races), queue, handover, hooks for the three agents
 with documented payloads, board, MCP, PowerShell module, the file gate (claims, merge detection, build wait). Not yet: on-demand probes over direct HTTP, the write side
 of the folder transport, delivering notifications into a chat over Claude's messaging socket (they are queued),

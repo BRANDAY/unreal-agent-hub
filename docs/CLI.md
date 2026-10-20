@@ -18,6 +18,7 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `hub here [<machine>] [--off] [--ttl N]` | Presence: "I am sitting at this machine" |
 | `hub claims [--json]` | Files claimed by chats through the file gate, held or over ([FILES.md](FILES.md)) |
 | `hub claims release <path>` | Free one claim by hand; ask its holder first |
+| `hub watch [status\|down\|up] [--note T]` | The project app (editor): its state; `down` = closed by a chat, it comes back; `up` = it is back ([WATCH.md](WATCH.md)) |
 | `hub grant [<res or machine>] [--token T]` | Answer a handover request: yes, take it |
 | `hub decline [<res or machine>] [--token T]` | Answer a handover request: not now |
 | `hub serve [--port N] [--no-tunnels]` | Run the board ([BOARD.md](BOARD.md)) |
