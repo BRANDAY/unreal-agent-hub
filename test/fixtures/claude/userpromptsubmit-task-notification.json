@@ -1,0 +1,1 @@
+{"session_id":"abc123","transcript_path":"/home/user/.claude/projects/p/abc123.jsonl","cwd":"/Users/me/game","permission_mode":"default","hook_event_name":"UserPromptSubmit","prompt":"<task-notification>\n<task-id>bsh7k2m9q</task-id>\n<status>completed</status>\n<summary>Background command \"Build the editor target\" completed (exit code 0)</summary>\n</task-notification>"}

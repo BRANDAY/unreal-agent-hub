@@ -69,11 +69,13 @@ lib/hook.cjs               the hook for every agent; lib/node-agent.cjs on nodes
 lib/agents/                claude.cjs, codex.cjs, cursor.cjs, index.cjs (detection)
 lib/detect/                markers, processes (Windows/POSIX), gpu (nvidia-smi), unreal-editor, load, probe
 lib/transport/             ssh-reverse, http-direct, folder, client (node -> hub)
-lib/adapters/              claude-desktop (titles, open chat), claude-messaging (duty chat), platform
+lib/adapters/              claude-desktop (titles, open chat, cloud ids), claude-transcripts (subagents, cloud sessions),
+                           claude-messaging (duty chat), platform
 lib/server/                board.cjs (HTTP, SSE, actions), nodes.cjs (tunnels, node holds)
 lib/mcp.cjs                MCP server over stdio
 lib/status.cjs, chats.cjs, notify.cjs, install-hooks.cjs
-web/                       index.html, app.js, style.css, i18n/*.json, vendor/ (React 18.3.1, htm 3.1.1)
+web/                       the built board page: index.html, assets/, i18n/*.json, THIRD-PARTY-LICENSES.txt
+web-src/                   its sources: React 19 + Mantine 9, Vite (npm run build -> web/)
 ps/AgentHub.psm1           PowerShell module
 profiles/                  unreal.json, generic.json, examples/
 .claude-plugin/            plugin.json, marketplace.json      (Claude Code)

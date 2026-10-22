@@ -107,6 +107,38 @@ chatRec(chats[1], 'working', { lastPrompt: 'The cook dies in FShaderCodeLibrary 
 chatRec(chats[2], 'needs-owner', { notice: 'Claude needs your permission to use PowerShell' });
 chatRec(chats[3], 'idle', { lastPrompt: 'Retarget the run cycle from the reference skeleton', machine: 'laptop', node: 'laptop' });
 for (const c of chats.slice(4)) chatRec(c, 'idle', { lastPrompt: c.title });
+
+// Background work (Claude Code): a chat whose turn ended with a build and a subagent still running, its subagents'
+// files where Claude Code keeps them, a cloud session started from another chat, and a chat closed long ago.
+const transcripts = path.join(home, 'claude', 'projects', 'MyGame');
+const sub = (c, id, meta, startedMin, lastMin) => {
+  const dir = path.join(transcripts, c.session, 'subagents');
+  fs.mkdirSync(dir, { recursive: true });
+  const log = path.join(dir, `agent-${id}.jsonl`), m = path.join(dir, `agent-${id}.meta.json`);
+  fs.writeFileSync(log, '{}\n');
+  fs.writeFileSync(m, JSON.stringify(meta));
+  const at = new Date(now - lastMin * min);
+  fs.utimesSync(log, at, at);
+  fs.utimesSync(m, at, at);
+  return startedMin;
+};
+chatRec(chats[4], 'background', { lastPrompt: 'Build the fog volumes, then compare the old town at night with the reference', updated: now - 3 * min,
+  lastReply: 'The editor build and the fog research run in the background; I will report when both are done.',
+  transcript: path.join(transcripts, `${chats[4].session}.jsonl`),
+  background: [
+    { id: 'b7k2m9q', type: 'shell', status: 'running', description: 'Build the editor target', command: 'hub lock cpp -- Build.bat MyGameEditor Win64 Development' },
+    { id: 'fog01', type: 'subagent', status: 'running', description: 'Find how the height fog is set up in the old town', agentType: 'Explore' },
+  ] });
+sub(chats[4], 'fog01', { description: 'Find how the height fog is set up in the old town', agentType: 'Explore', model: 'haiku', requestShape: 'background' }, 12, 1);
+sub(chats[0], 'ref02', { description: 'Compare the harbor shots with the reference', agentType: 'general-purpose', model: 'sonnet' }, 6, 0.5);
+sub(chats[0], 'lum03', { description: 'List the lights without shadows', agentType: 'Explore', finished: true }, 70, 55);
+sub(chats[5], 'gate04', { description: 'Read the portal code and list the level loads', agentType: 'Plan', finished: true }, 140, 120);
+chatRec(chats[0], 'working', { lastPrompt: 'Bake the lighting for the harbor level and compare it with the reference shots', transcript: path.join(transcripts, `${chats[0].session}.jsonl`), updated: now - min });
+chatRec(chats[5], 'idle', { lastPrompt: 'Door portals between the levels', transcript: path.join(transcripts, `${chats[5].session}.jsonl`),
+  cloud: [{ title: 'Profile the portal streaming on a cloud runner', remote: 'session_01DemoCloudSessionAb', task: 'task_5e8a9c21', started: now - 95 * min }] });
+chatRec(chats[8], 'ended', { lastPrompt: 'Footstep sounds on wet stone', updated: now - 8 * 3600e3 });
+U.appendLine(path.join(dir, 'chats.jsonl'), JSON.stringify({ t: now - 20 * min, session: chats[4].session, title: chats[4].title, agent: 'claude', event: 'UserPromptSubmit', state: 'working' }));
+U.appendLine(path.join(dir, 'chats.jsonl'), JSON.stringify({ t: now - 9 * min, session: chats[4].session, title: chats[4].title, agent: 'claude', event: 'Stop', state: 'background' }));
 U.writeJson(path.join(dir, 'chats', 'e5f4a6b8-5555.json'), { session: 'e5f4a6b8-5555', title: 'Profile the laptop at Medium', agent: 'claude', machine: 'laptop', node: 'laptop', project: 'MyGame', state: 'working', updated: now - 2 * min, lastPrompt: 'Measure the frame time on the laptop' });
 
 const take = (key, rec, ago) => {

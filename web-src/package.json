@@ -1,0 +1,26 @@
+{
+  "name": "unreal-agent-hub-board",
+  "private": true,
+  "version": "0.4.0",
+  "description": "Sources of the board page (React + Mantine). `npm run build` writes ../web/index.html and ../web/assets/, which the hub serves; node_modules stays local and is not needed at runtime.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/licenses.mjs"
+  },
+  "dependencies": {
+    "@mantine/charts": "9.7.3",
+    "@mantine/core": "9.7.3",
+    "@mantine/hooks": "9.7.3",
+    "@tabler/icons-react": "3.49.0",
+    "clsx": "2.1.1",
+    "mantine-datatable": "9.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "recharts": "3.10.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.5"
+  }
+}

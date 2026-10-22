@@ -15,9 +15,10 @@ Every agent runs the same command on its events: `hub hook [--agent claude|codex
 | `PreToolUse` | `PreToolUse` | `PreToolUse` | `beforeShellExecution`, `beforeMCPExecution`, `preToolUse` |
 | `Notification` | `Notification` | not available | not available |
 | `Stop` | `Stop` | `Stop` | `stop` |
+| `PostToolUse` (`start_session` only) | `PostToolUse`, matcher `mcp__.*__start_session` | not used | not used |
 | `SessionEnd` | `SessionEnd` | `SessionEnd` | `sessionEnd` |
 
-What each event does: `SessionStart` and `UserPromptSubmit` record the chat for the board and may add one or two lines of context; `PreToolUse` applies the gates (heavy work waits, or is denied after `gateWaitSec`); `Notification` marks a chat that needs a person; `Stop` and `SessionEnd` mark the chat idle or ended and release holds the hooks took.
+What each event does: `SessionStart` and `UserPromptSubmit` record the chat for the board and may add one or two lines of context; `PreToolUse` applies the gates (heavy work waits, or is denied after `gateWaitSec`); `Notification` marks a chat that needs a person; `Stop` and `SessionEnd` mark the chat idle or ended and release holds the hooks took. Claude Code's `Stop` also carries `background_tasks`: when some are unfinished, the chat is "working in the background" instead of idle, and the board lists them; a `<task-notification>` with a finished status in the next prompt drops that task. Claude Code's `PostToolUse` is registered for one tool only, the desktop app's `start_session`: with `target: "cloud"` it records the cloud session in the chat's record (cloud sessions run no local hooks). The hook also keeps `transcript_path`, where the board finds the chat's subagents ([BOARD.md](BOARD.md)).
 
 Without `Notification` (Codex, Cursor) the board cannot show "needs you" from a permission prompt; it only sees working and idle.
 
@@ -35,7 +36,7 @@ Without `Notification` (Codex, Cursor) the board cannot show "needs you" from a 
 | notification | `notification_type`, `message` | none |
 | last reply | `last_assistant_message` | none |
 
-Notification types: `permission_prompt`, `elicitation_dialog` and `agent_needs_input` set the chat to "needs you"; `idle_prompt` sets it to idle.
+Notification types: `permission_prompt`, `elicitation_dialog` and `agent_needs_input` set the chat to "needs you"; `idle_prompt` sets it to idle, unless it is working in the background.
 
 ## What the hub prints
 
@@ -78,7 +79,7 @@ It writes the hub's entries into the agent's user settings, marks them by their 
 
 | Agent | File written | Entries |
 |---|---|---|
-| Claude Code | `~/.claude/settings.json` | `SessionStart` (10 s), `UserPromptSubmit` (10 s), `PreToolUse` matcher `Bash\|PowerShell\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*` (1800 s, status message "waiting for a shared resource"), `Notification` (10 s, async), `Stop` (10 s, async), `SessionEnd` (10 s) |
+| Claude Code | `~/.claude/settings.json` | `SessionStart` (10 s), `UserPromptSubmit` (10 s), `PreToolUse` matcher `Bash\|PowerShell\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*` (1800 s, status message "waiting for a shared resource"), `Notification` (10 s, async), `PostToolUse` matcher `mcp__.*__start_session` (10 s, async), `Stop` (10 s, async), `SessionEnd` (10 s) |
 | Codex | `~/.codex/hooks.json` | `SessionStart`, `UserPromptSubmit` (10 s each), `PreToolUse` matcher `^(Bash\|shell\|apply_patch\|mcp__.*)$` (1800 s), `Stop` (10 s), `SessionEnd` (3 s) |
 | Cursor | `~/.cursor/hooks.json` (`{"version":1,"hooks":{...}}`) | `sessionStart`, `beforeSubmitPrompt`, `stop`, `sessionEnd` (10 s each), `beforeShellExecution`, `beforeMCPExecution` (1800 s) |
 

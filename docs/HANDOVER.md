@@ -1,7 +1,7 @@
 # Handover requests: "Yes, take it"
 
 What happens when a run needs a machine that a person is using - and why nothing is ever taken from them.
-Implementation: `lib/handover.cjs`, `lib/lock-client.cjs`, the board banner in `web/app.js`.
+Implementation: `lib/handover.cjs`, `lib/lock-client.cjs`, the board banner in `web-src/src/Asks.jsx`.
 
 ## The rule
 

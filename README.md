@@ -60,12 +60,13 @@ shows the queue.
   ([AGENTS](docs/AGENTS.md)); a Claude Code plugin with its own marketplace; `hub install-hooks --agent ...`.
 - **MCP server.** `hub_status`, `hub_hold`, `hub_release`, `hub_here`, `hub_grant`, `hub_decline` ([MCP](docs/MCP.md)).
 - **Live board.** Resources with holders, timers and queues, machines with probes, a 24 h timeline, load, chats with
-  their agent, in English, German, French, Italian, Spanish and Russian ([BOARD](docs/BOARD.md)).
+  their agent and their background work, subagents and cloud sessions of Claude Code chats, charts, in English, German, French, Italian, Spanish and Russian ([BOARD](docs/BOARD.md)).
 - **Many machines, nothing to install as a service.** The hub opens a reverse ssh tunnel to each node; the node's
   hooks talk to `127.0.0.1` there. Direct HTTP and a synced folder are alternatives ([TRANSPORTS](docs/TRANSPORTS.md)).
 - **Safe by default.** Board on 127.0.0.1 with Host and Origin checks, node tokens, fixed ssh commands, hooks that
   fail open, nothing that stops processes ([SECURITY](docs/SECURITY.md)).
-- **No dependencies.** Node.js >= 18, nothing from npm at runtime; React and htm are vendored for the board.
+- **No dependencies.** Node.js >= 18, nothing from npm at runtime; the board page is a prebuilt React + Mantine bundle
+  (sources in `web-src/`, licenses of the bundled MIT/ISC/BSD libraries in `web/THIRD-PARTY-LICENSES.txt`).
 
 ### A busy day on the board
 

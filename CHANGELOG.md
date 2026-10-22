@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.0 - 2026-10-22
+
+What runs beside a chat, and a new board page.
+
+- **Working in the background** (Claude Code): the `Stop` event's `background_tasks` with unfinished work (shells,
+  subagents, monitors, workflows, teammates, cloud sessions) sets the chat to `background` instead of idle and keeps
+  the list in its record; an `idle_prompt` notification keeps the state; a `<task-notification>` with a finished
+  status in the next prompt drops that task. Other agents are unchanged. On a node, `background` frees the node's
+  chat lock like idle does.
+- **Cloud sessions:** a `PostToolUse` hook for the desktop app's `start_session` tool only (matcher
+  `mcp__.*__start_session`, in `hooks/hooks.json` and `hub install-hooks --agent claude`) records sessions a chat
+  starts with `target: "cloud"`; the desktop app's `cloudSpawnedTasks` adds older ones (title looked up once in the
+  parent's transcript).
+- **Subagents** of the Claude Code chats on the hub machine, read from `<transcript>/subagents/agent-*.meta.json`
+  (`lib/adapters/claude-transcripts.cjs`); the hook now keeps `transcript_path`.
+- **Board state:** `sessions[].background`, `.subagents`, `.started`, `.old` (closed more than 6 h ago; `hidden`
+  counts them, `/state?live=1` leaves them out), top-level `subagents[]` and `cloud[]`, chat history of kind
+  `background`. A tool call no longer ends the timeline's "working" interval, and only tool calls that change the
+  state are logged to `chats.jsonl`.
+- **Desktop records** are also read from `%LOCALAPPDATA%/Claude-Data/<profile>/claude-code-sessions` (newer Windows
+  builds of the app).
+- **New board page:** React 19 + Mantine 9 (mantine-datatable, @mantine/charts, Tabler icons), built with Vite from
+  `web-src/` into `web/` (committed; nothing to install at run time; `npm run board:build` rebuilds it). Counters,
+  busy resource cards filled with the resource colour (new optional `color` in the config), machines, a chats table
+  with tabs, search, a switch for long-closed chats and expandable rows, subagents, cloud sessions, charts (time per
+  chat, chats by state, load, subagents), a timeline with "now" on the left that scrolls into the past (1/2/4 h in
+  view), light and dark themes. Everything of the old page stays: handover banner,
+  presence, nodes and roles, notifications, `?win=`, `?lang=` and all six languages (new keys in every dictionary). A
+  narrow pane gets a compact layout (state as an icon, details under the name, the banner's buttons under its
+  text). The vendored React 18 and htm are gone; `web/THIRD-PARTY-LICENSES.txt` lists the bundled libraries.
+- `examples/demo.cjs` shows background work, subagents, a cloud session and a long-closed chat.
+- Tests 48 (7 new).
+
 ## 0.3.0 - 2026-10-20
 
 Catching up with the studio setup the hub comes from (there is no 0.2.x). Editor restarts no longer break the other

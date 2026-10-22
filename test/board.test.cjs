@@ -35,7 +35,13 @@ test('board: Host check, actions, node token', async () => {
     assert.deepEqual(st.resources.map(r => r.key).sort(), ['cpp', 'laptop']);
     assert.equal(st.nodes[0].insecure, false);
     assert.equal((await req(port, 'GET', '/', own)).status, 200);
-    assert.equal((await req(port, 'GET', '/vendor/react@18.3.1.production.min.js', own)).status, 200);
+    const page = (await req(port, 'GET', '/', own)).body;
+    const asset = (page.match(/assets\/[\w.-]+\.js/) || [])[0];
+    assert.ok(asset, 'the page loads its built script from assets/');
+    const js = await req(port, 'GET', '/' + asset, own);
+    assert.equal(js.status, 200);
+    assert.ok(js.body.length > 1000);
+    assert.equal((await req(port, 'GET', '/assets/../../package.json', own)).status, 404);
     assert.equal((await req(port, 'GET', '/i18n/en.json', own)).status, 200);
     assert.equal((await req(port, 'GET', '/../package.json', own)).status, 404);
     // Page actions need the header and a matching Origin.

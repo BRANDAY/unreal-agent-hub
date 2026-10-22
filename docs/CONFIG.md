@@ -74,6 +74,7 @@ Node-side keys (in the config of a machine with `role: "node"`):
 | `ttlMin` | `60` | Hold or lock lifetime if the caller gives none |
 | `label` | `id` | Board name |
 | `icon` | `""` | Board icon: `cpp cook machine smoke editor gpu box`; unknown names fall back to the resource id, then to a box |
+| `color` | by icon | Board colour: a Mantine colour name (`blue`, `orange`, `violet`, `pink`, `teal`, `grape`, `lime`, `cyan`, `yellow`, `indigo`, `red`, `green`, `gray`) or any CSS colour |
 
 The internal key is `id` for machine resources and `<project>~<id>` for project resources.
 
