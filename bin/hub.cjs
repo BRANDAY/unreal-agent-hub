@@ -5,42 +5,48 @@ const path = require('path');
 const fs = require('fs');
 const C = require('../lib/config.cjs');
 const U = require('../lib/util.cjs');
+const { T } = require('../lib/i18n.cjs');
 
-const HELP = `Unreal Agent Hub - a queue for shared resources of AI coding agents and scripts.
+// Commands of `hub help`: [syntax, description key, gap after the syntax (default: pad to column 42)]. The syntax stays as
+// typed; the explanations are translated.
+const HELP_CMDS = [
+  ['status [--json]', 'status'],
+  ['lock <res>[,<res>...] [opts] -- <cmd>', 'lock', 2],
+  ['hold <res> [opts]', 'hold'],
+  ['release <res> [--force]', 'release'],
+  ['break <res> [--force]', 'break'],
+  ['here [<machine>] [--off] [--ttl N]', 'here'],
+  ['claims [--json] | claims release <path>', 'claims'],
+  ['watch [status|down|up] [--note TEXT]', 'watch'],
+  ['grant [<res|machine>] [--token T]', 'grant'],
+  ['decline [<res|machine>] [--token T]', 'decline'],
+  ['serve [--port N] [--no-tunnels]', 'serve'],
+  ['probe', 'probe'],
+  ['dump', 'dump'],
+  ['hook [--agent claude|codex|cursor]', 'hook'],
+  ['mcp', 'mcp'],
+  ['install-hooks --agent A [--uninstall] [--dry-run] [--file F]', null],
+  ['node add <id> [--ssh alias] [--tunnel-port N] [--label L] [--roles a,b]', null],
+  ['node install <id>', 'nodeInstall'],
+  ['duty', 'duty'],
+  ['take <res> --pid N [opts] / free <res> --token T', 'take', 5],
+  ['config [--json]', 'config'],
+  ['doctor', 'doctor'],
+  ['version', null],
+];
 
-Usage: hub <command> [options]
-
-  status [--json]                         who holds what, who waits, handover requests
-  lock <res>[,<res>...] [opts] -- <cmd>  run a command while holding <res> (like flock); several are taken
-                                          in the order given ("cpp,cook": a packaging run holds both)
-  hold <res> [opts]                       hold <res> for this chat until release / its agent exits / TTL
-  release <res> [--force]                 release a hold of this chat (--force: anyone's)
-  break <res> [--force]                   drop a stale lock (--force: also a live one; ask its owner first)
-  here [<machine>] [--off] [--ttl N]      "I am sitting at this machine" (presence)
-  claims [--json] | claims release <path> files claimed by chats (file gate); release frees one by hand
-  watch [status|down|up] [--note TEXT]    the project app (editor): state; down = closed by a chat, comes back
-  grant [<res|machine>] [--token T]       answer a handover request: "yes, take it"
-  decline [<res|machine>] [--token T]     answer a handover request: "not now"
-  serve [--port N] [--no-tunnels]         run the board (http://127.0.0.1:8790)
-  probe                                   what this machine is busy with (JSON)
-  dump                                    this machine's chats (JSON)
-  hook [--agent claude|codex|cursor]      hook entry point (stdin: the agent's hook JSON)
-  mcp                                     MCP server over stdio
-  install-hooks --agent A [--uninstall] [--dry-run] [--file F]
-  node add <id> [--ssh alias] [--tunnel-port N] [--label L] [--roles a,b]
-  node install <id>                       print the steps to set up a node
-  duty                                    make this chat the hub's duty chat (notifications)
-  take <res> --pid N [opts] / free <res> --token T     for script wrappers (PowerShell module)
-  config [--json]                         the merged configuration (tokens hidden)
-  doctor                                  check the setup
-  version
-
-Options for lock / hold / take:
-  --ttl N  --note TEXT  --no-wait  --wait-min N  --priority N  --ask | --no-ask  --chat NAME
-
-Resources: an id ("cpp"), a project resource ("editor" inside a project with .unreal-agent-hub.json),
-"@machine", "@node:<id>", or a pool "role:runner" (the first free runner wins).
-Home folder: ${C.home()} (UAH_HOME moves it).`;
+function help() {
+  const lines = [T('cli.help.title'), '', T('cli.help.usage'), ''];
+  for (const [cmd, key, gap] of HELP_CMDS) {
+    if (!key) { lines.push('  ' + cmd); continue; }
+    const [first, ...more] = T('cli.help.' + key).split('\n');
+    lines.push('  ' + (gap ? cmd + ' '.repeat(gap) : cmd.padEnd(40)) + first);
+    for (const m of more) lines.push(' '.repeat(42) + m);
+  }
+  lines.push('', T('cli.help.opts'), '  --ttl N  --note TEXT  --no-wait  --wait-min N  --priority N  --ask | --no-ask  --chat NAME', '',
+    T('cli.help.resources'), T('cli.help.home', { home: C.home() }));
+  return lines.join('\n');
+}
 
 function parse(argv) {
   const out = { _: [], rest: [] };
@@ -66,7 +72,8 @@ function acquireOpts(a, extra) {
     ttlMin: a.ttl ? Number(a.ttl) : undefined, note: typeof a.note === 'string' ? a.note : '', noWait: !!a['no-wait'],
     waitMin: a['wait-min'] ? Number(a['wait-min']) : undefined, priority: a.priority != null ? Number(a.priority) : undefined,
     ask: a.ask ? true : a['no-ask'] ? false : undefined, chat: typeof a.chat === 'string' ? a.chat : undefined,
-    onWait: (r, waited) => process.stderr.write(`[hub] ${r.key} is busy: ${r.text}. Waiting${waited >= 60e3 ? `, ${Math.round(waited / 60e3)} min so far` : ''} (--no-wait fails at once).\n`),
+    onWait: (r, waited) => process.stderr.write(T('cli.waiting', { key: r.key, text: r.text,
+      since: waited >= 60e3 ? T('cli.waitingSince', { n: Math.round(waited / 60e3) }) : '' }) + '\n'),
   }, extra || {});
 }
 
@@ -74,7 +81,10 @@ async function main() {
   const argv = process.argv.slice(2);
   const cmd = argv[0] || 'help';
   const a = parse(argv.slice(1));
-  if (cmd === 'help' || cmd === '--help' || cmd === '-h') return print(HELP);
+  if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
+    try { C.load({ cwd: process.cwd() }); } catch (_) {} // sets the language
+    return print(help());
+  }
   if (cmd === 'version' || cmd === '--version') return print(require('../package.json').version);
   if (cmd === 'hook') {
     try { await require('../lib/hook.cjs').run(typeof a.agent === 'string' ? a.agent : ''); } catch (e) {
@@ -96,7 +106,7 @@ async function main() {
     }
     case 'lock': {
       const names = String(a._[0] || '').split(',').map(s => s.trim()).filter(Boolean);
-      if (!names.length || !a.rest.length) die('usage: hub lock <resource>[,<resource>...] [options] -- <command...>');
+      if (!names.length || !a.rest.length) die(T('cli.usage', { syntax: 'hub lock <resource>[,<resource>...] [options] -- <command...>' }));
       const st = store(cfg);
       // Several resources are taken one after another in the order given and released in reverse. Keep one order
       // everywhere (cpp before cook) and two such commands never wait on each other.
@@ -108,7 +118,7 @@ async function main() {
           for (const h of held.reverse()) if (!h.reentrant && !h.presence) client.release(cfg, st, h.key, h.token, 'lock not completed');
           die(r.error, 75);
         }
-        if (!r.reentrant && !r.presence) process.stderr.write(`[hub] took ${r.key}${r.waitedMs > 6000 ? ` after ${(r.waitedMs / 60e3).toFixed(1)} min` : ''}.\n`);
+        if (!r.reentrant && !r.presence) process.stderr.write(T('cli.took', { key: r.key, after: r.waitedMs > 6000 ? T('cli.tookAfter', { n: (r.waitedMs / 60e3).toFixed(1) }) : '' }) + '\n');
         env[client.tokenEnv(r.key)] = r.token;
         held.push(r);
       }
@@ -126,7 +136,7 @@ async function main() {
     }
     case 'take': {
       const res = a._[0];
-      if (!res || !a.pid) die('usage: hub take <resource> --pid <pid> [options]');
+      if (!res || !a.pid) die(T('cli.usage', { syntax: 'hub take <resource> --pid <pid> [options]' }));
       const r = await client.acquire(cfg, store(cfg), res, acquireOpts(a, { mode: 'script', pid: Number(a.pid), script: typeof a.script === 'string' ? a.script : 'script' }));
       print(JSON.stringify(r.ok ? { ok: true, key: r.key, token: r.token, reentrant: !!r.reentrant, presence: !!r.presence, ttlMin: r.lock && r.lock.ttlMin, waitedMs: r.waitedMs }
         : { ok: false, error: r.error }));
@@ -134,86 +144,88 @@ async function main() {
     }
     case 'free': {
       const res = a._[0];
-      if (!res || !a.token) die('usage: hub free <resource> --token <token>');
+      if (!res || !a.token) die(T('cli.usage', { syntax: 'hub free <resource> --token <token>' }));
       const m = C.resolve(cfg, res);
       const key = m.length ? m[0].key : res;
       const r = client.release(cfg, store(cfg), key, String(a.token), 'released');
-      return print(r.ok ? `released ${key}` : `${key}: ${r.error === 'gone' ? 'not held' : 'held by someone else now - left in place'}`);
+      return print(r.ok ? T('cli.released', { key }) : T(r.error === 'gone' ? 'cli.freeGone' : 'cli.freeOther', { key }));
     }
     case 'hold': {
       const res = a._[0];
-      if (!res) die('usage: hub hold <resource> [--ttl N] [--note text] [--no-wait]');
+      if (!res) die(T('cli.usage', { syntax: 'hub hold <resource> [--ttl N] [--note text] [--no-wait]' }));
       const who = client.identity(cfg, { chat: a.chat });
-      if (!who.session && !a.chat && !who.ownerPid && !a.ttl) die('a hold outlives this command: run it from an agent chat, or give --chat NAME and --ttl N.');
+      if (!who.session && !a.chat && !who.ownerPid && !a.ttl) die(T('cli.holdNeedsChat'));
       const r = await client.acquire(cfg, store(cfg), res, acquireOpts(a, { mode: 'hold', script: 'hub hold', extra: { by: 'cli' } }));
       if (!r.ok) die(r.error, 75);
-      return print(r.reentrant ? `already held by this chat: ${r.key}` : r.presence ? `${r.key}: the person's presence lets this chat through`
-        : `held ${r.key} until \`hub release ${res}\`, the end of this chat, or ${r.lock.ttlMin} min`);
+      return print(r.reentrant ? T('cli.holdAlready', { key: r.key }) : r.presence ? T('cli.holdPresence', { key: r.key })
+        : T('cli.holdDone', { key: r.key, res, ttl: r.lock.ttlMin }));
     }
     case 'release': {
       const res = a._[0];
-      if (!res) die('usage: hub release <resource> [--force]');
+      if (!res) die(T('cli.usage', { syntax: 'hub release <resource> [--force]' }));
       const st = store(cfg);
       const m = C.resolve(cfg, res);
       const key = m.length ? m[0].key : res;
       const lock = st.readLock(key);
-      if (!lock) return print(`${key} is not held`);
+      if (!lock) return print(T('cli.notHeld', { key }));
       const who = client.identity(cfg, {});
-      if (!client.isMineFn(key, who)(lock) && !a.force) die(`${key} is held by ${require('../lib/store.cjs').describe(lock)}, not by this chat. --force releases it anyway; ask its owner first.`);
+      if (!client.isMineFn(key, who)(lock) && !a.force) die(T('cli.heldByOther', { key, holder: require('../lib/store.cjs').describe(lock) }));
       const r = client.release(cfg, st, key, lock.token, a.force ? 'released by hand (--force)' : 'released');
-      return print(r.ok ? `released ${key}` : `could not release ${key}: ${r.error}`);
+      return print(r.ok ? T('cli.released', { key }) : T('cli.releaseFail', { key, error: r.error }));
     }
     case 'watch': {
       const W = require('../lib/watch.cjs');
       const match = C.profileFor(cfg, process.cwd());
       const profile = (match && match.profile) || cfg.profiles[cfg.profile] || {};
       const w = W.settings(cfg, profile, match);
-      if (!w) die('no `watch` settings for this folder (a profile or .unreal-agent-hub.json with watch.port)');
+      if (!w) die(T('cli.watchNone'));
       W.remember(cfg, w);
       const sub = a._[0] || 'status';
       if (sub === 'down') {
         const who = client.identity(cfg, { chat: a.chat });
         W.markDown(cfg, w.project, { by: who.chat || (typeof a.note === 'string' ? a.note : '') || 'a script', session: who.session, note: typeof a.note === 'string' ? a.note : '' });
-        return print(`${w.project}: marked as closed by a chat - calls wait for it and the board's watchdog starts it again when nothing holds ${w.busyKeys.join(', ') || 'a resource'}`);
+        return print(T('cli.watchDown', { project: w.project, busy: w.busyKeys.join(', ') || T('watch.aResource') }));
       }
-      if (sub === 'up') { W.markUp(cfg, w.project); return print(`${w.project}: marked as up`); }
-      if (sub !== 'status') die('usage: hub watch [status|down|up] [--note TEXT]');
+      if (sub === 'up') { W.markUp(cfg, w.project); return print(T('cli.watchUp', { project: w.project })); }
+      if (sub !== 'status') die(T('cli.usage', { syntax: 'hub watch [status|down|up] [--note TEXT]' }));
       const alive = await W.portAlive(w.port);
       const why = alive ? null : W.restartPending(cfg, store(cfg), w);
-      return print(`${w.project}: port ${w.port} ${alive ? 'answers' : why ? `is dead, restart under way: ${why}` : 'is dead, nothing restarting it'}` +
-        `; watchdog ${w.start ? `starts it with: ${[].concat(w.start).join(' ')}` : 'off (no watch.start)'}`);
+      return print(T('cli.watchState', { project: w.project, port: w.port,
+        state: alive ? T('cli.watchAnswers') : why ? T('cli.watchDeadRestart', { why }) : T('cli.watchDeadIdle'),
+        dog: w.start ? T('cli.watchdogOn', { cmd: [].concat(w.start).join(' ') }) : T('cli.watchdogOff') }));
     }
     case 'break': {
       const res = a._[0];
-      if (!res) die('usage: hub break <resource> [--force]');
+      if (!res) die(T('cli.usage', { syntax: 'hub break <resource> [--force]' }));
       const st = store(cfg);
       const m = C.resolve(cfg, res);
       const key = m.length ? m[0].key : res;
       const lock = st.readLock(key);
-      if (!lock) return print(`${key} is not held`);
+      if (!lock) return print(T('cli.notHeld', { key }));
       const { describe } = require('../lib/store.cjs');
-      if (lock.stale) { const r = st.breakStale(key, lock.token, 'hub break'); return print(r.ok ? `broke the stale lock of ${describe(lock)} (${lock.stale})` : `not broken: ${r.error}`); }
-      if (!a.force) die(`${key} is live: ${describe(lock)}. Only --force drops a live lock; ask its owner first. Nothing here stops processes.`);
+      if (lock.stale) { const r = st.breakStale(key, lock.token, 'hub break'); return print(r.ok ? T('cli.brokeStale', { what: describe(lock), stale: lock.stale }) : T('cli.notBroken', { error: r.error })); }
+      if (!a.force) die(T('cli.breakLive', { key, what: describe(lock) }));
       const r = st.forceBreak(key, 'hub break --force');
-      return print(r.ok ? `broke the lock of ${describe(lock)}` : `not broken: ${r.error}`);
+      return print(r.ok ? T('cli.broke', { what: describe(lock) }) : T('cli.notBroken', { error: r.error }));
     }
     case 'claims': {
       const FG = require('../lib/file-gate.cjs');
       if (a._[0] === 'release') {
-        if (!a._[1]) die('usage: hub claims release <path>');
+        if (!a._[1]) die(T('cli.usage', { syntax: 'hub claims release <path>' }));
         const r = FG.release(cfg, a._[1], process.cwd(), store(cfg));
         if (!r.ok) die(r.error);
-        return print(`released ${r.claim.rel || r.claim.file} (was "${r.claim.chat || r.claim.session}")`);
+        return print(T('cli.claimReleased', { file: r.claim.rel || r.claim.file, chat: r.claim.chat || r.claim.session }));
       }
       const list = FG.list(cfg);
       if (a.json) return print(JSON.stringify(list, null, 2));
-      if (!list.length) return print('no claimed files');
-      return print(list.map(c => `${c.active ? 'held' : `over (${c.why})`}  ${c.rel || c.file}  ${c.chat || c.session}  since ${U.hm(c.since)}, last edit ${U.hm(c.at)}`).join('\n'));
+      if (!list.length) return print(T('cli.noClaims'));
+      return print(list.map(c => T('cli.claimLine', { state: c.active ? T('cli.claimHeld') : T('cli.claimOver', { why: T('cli.claimWhy.' + String(c.why).replace(/,.*/, '')) }),
+        file: c.rel || c.file, chat: c.chat || c.session, since: U.hm(c.since), last: U.hm(c.at) })).join('\n'));
     }
     case 'here': {
       const r = require('../lib/presence.cjs').here(cfg, store(cfg), a._[0], !a.off, { ttlMin: a.ttl ? Number(a.ttl) : undefined, by: 'hub here' });
       if (!r.ok) die(r.error);
-      return print(a.off ? `presence removed from ${r.key}` : `presence on ${r.key}${r.ttlMin ? ` for ${r.ttlMin} min` : ''}: remote runs queue and ask`);
+      return print(a.off ? T('cli.hereOff', { key: r.key }) : T('cli.hereOn', { key: r.key, ttl: r.ttlMin ? T('presence.forMin', { n: r.ttlMin }) : '' }));
     }
     case 'grant':
     case 'decline': {
@@ -225,10 +237,10 @@ async function main() {
       const { createBoard } = require('../lib/server/board.cjs');
       const b = createBoard(cfg, { port: a.port ? Number(a.port) : undefined, noTunnels: !!a['no-tunnels'] });
       try { await b.listen(); } catch (e) {
-        if (e.code === 'EADDRINUSE') { print(`port ${a.port || cfg.port} is taken - the board is already running`); return process.exit(0); }
+        if (e.code === 'EADDRINUSE') { print(T('cli.portTaken', { port: a.port || cfg.port })); return process.exit(0); }
         throw e;
       }
-      print(`${new Date().toISOString()} ${cfg.name}: http://127.0.0.1:${a.port || cfg.port}  (state ${cfg.stateDir}, pid ${process.pid})`);
+      print(T('cli.serving', { time: new Date().toISOString(), name: cfg.name, port: a.port || cfg.port, state: cfg.stateDir, pid: process.pid }));
       return;
     }
     case 'probe': {
@@ -241,17 +253,17 @@ async function main() {
     case 'install-hooks': {
       const r = require('../lib/install-hooks.cjs').run({ agent: a.agent, uninstall: !!a.uninstall, dryRun: !!a['dry-run'], file: typeof a.file === 'string' ? a.file : undefined, cfg });
       if (a['dry-run']) print(r.text);
-      else print(`${a.uninstall ? 'removed the hub hooks from' : 'installed the hub hooks in'} ${r.file}${r.backup ? ` (backup ${path.basename(r.backup)})` : ''}`);
+      else print(T(a.uninstall ? 'cli.hooksRemoved' : 'cli.hooksInstalled', { file: r.file, backup: r.backup ? T('cli.hooksBackup', { name: path.basename(r.backup) }) : '' }));
       for (const n of r.notes || []) print(n);
       return;
     }
     case 'node': return nodeCmd(cfg, a);
     case 'duty': {
       const sid = process.env.CLAUDE_CODE_SESSION_ID;
-      if (!sid) die('run `hub duty` from the chat that should receive the hub\'s notifications');
+      if (!sid) die(T('cli.dutyNeedsChat'));
       U.writeJson(path.join(cfg.stateDir, 'duty.json'), { session: sid, hostSession: process.env.CLAUDE_CODE_HOST_SESSION_ID || '', since: Date.now(),
         socket: process.env.CLAUDE_CODE_MESSAGING_SOCKET ? true : false });
-      return print(`this chat (${sid.slice(0, 8)}) is the hub's duty chat now; handover requests and "machine is yours again" go here`);
+      return print(T('cli.dutyDone', { id: sid.slice(0, 8) }));
     }
     case 'config': {
       const shown = JSON.parse(JSON.stringify(cfg, (k, v) => (k === 'token' && v ? '***' : v)));
@@ -259,14 +271,14 @@ async function main() {
       return print(JSON.stringify(shown, null, 2));
     }
     case 'doctor': return doctor(cfg);
-    default: die(`unknown command "${cmd}" - see hub help`);
+    default: die(T('cli.unknown', { cmd }));
   }
 }
 
 function nodeCmd(cfg, a) {
   const sub = a._[0], id = C.safeId(a._[1] || '');
   if (sub === 'add') {
-    if (!id) die('usage: hub node add <id> [--ssh alias] [--tunnel-port N] [--label L] [--roles runner,workstation]');
+    if (!id) die(T('cli.usage', { syntax: 'hub node add <id> [--ssh alias] [--tunnel-port N] [--label L] [--roles runner,workstation]' }));
     const file = cfg.machineFile;
     const m = U.readJson(file) || {};
     m.nodes = m.nodes || [];
@@ -280,44 +292,43 @@ function nodeCmd(cfg, a) {
       profile: n.profile || 'unreal', token: n.token || U.rand(32),
     });
     U.writeJson(file, m);
-    print(`node "${id}" is in ${file}. On that machine, ~/.unreal-agent-hub/config.json:`);
+    print(T('cli.nodeAdded', { id, file }));
     return print(JSON.stringify({ role: 'node', id, hubUrl: `http://127.0.0.1:${n.tunnelPort}`, token: n.token, profile: n.profile }, null, 2));
   }
   if (sub === 'install') {
     const n = cfg.nodes.find(x => x.id === id);
-    if (!n) die(`no node "${id}" - run hub node add ${id} first`);
+    if (!n) die(T('cli.nodeNone', { id }));
     return print([
-      `Steps for node "${id}" (nothing is run from here):`,
-      `1. On ${id}: install Node.js >= 18, then the plugin (Claude Code: /plugin marketplace add <owner>/unreal-agent-hub, /plugin install unreal-agent-hub),`,
-      `   or the npm package: npm i -g unreal-agent-hub && hub install-hooks --agent claude`,
-      `2. On ${id}: write ~/.unreal-agent-hub/config.json as printed by \`hub node add ${id}\` (role node, hubUrl, token).`,
-      `3. Here: make sure \`ssh ${n.ssh || id} node .unreal-agent-hub/bin/hub.cjs probe\` prints JSON (ssh keys are yours to set up).`,
-      `4. Here: restart the board (hub serve); it opens the tunnel 127.0.0.1:${n.tunnelPort} on ${id}.`,
+      T('cli.nodeSteps.head', { id }),
+      T('cli.nodeSteps.s1', { id }),
+      T('cli.nodeSteps.s2', { id }),
+      T('cli.nodeSteps.s3', { ssh: n.ssh || id }),
+      T('cli.nodeSteps.s4', { id, port: n.tunnelPort }),
     ].join('\n'));
   }
-  die('usage: hub node add <id> | hub node install <id>');
+  die(T('cli.usage', { syntax: 'hub node add <id> | hub node install <id>' }));
 }
 
 async function doctor(cfg) {
   const lines = [];
   const ok = (good, text) => lines.push(`${good ? 'ok  ' : 'warn'} ${text}`);
-  ok(Number(process.versions.node.split('.')[0]) >= 18, `Node.js ${process.versions.node} (needs >= 18)`);
-  ok(cfg.machineFileExists, `machine config ${cfg.machineFile}${cfg.machineFileExists ? '' : ' - missing, defaults in use'}`);
-  try { fs.mkdirSync(cfg.stateDir, { recursive: true }); fs.accessSync(cfg.stateDir, fs.constants.W_OK); ok(true, `state folder ${cfg.stateDir}`); } catch (e) { ok(false, `state folder ${cfg.stateDir}: ${e.code}`); }
-  ok(true, `role ${cfg.role}, id ${cfg.id}, roles ${(cfg.roles || []).join(', ')}`);
+  ok(Number(process.versions.node.split('.')[0]) >= 18, T('cli.doc.node', { v: process.versions.node }));
+  ok(cfg.machineFileExists, T('cli.doc.machine', { file: cfg.machineFile, missing: cfg.machineFileExists ? '' : T('cli.doc.machineMissing') }));
+  try { fs.mkdirSync(cfg.stateDir, { recursive: true }); fs.accessSync(cfg.stateDir, fs.constants.W_OK); ok(true, T('cli.doc.state', { dir: cfg.stateDir })); } catch (e) { ok(false, T('cli.doc.stateErr', { dir: cfg.stateDir, code: e.code })); }
+  ok(true, T('cli.doc.role', { role: cfg.role, id: cfg.id, roles: (cfg.roles || []).join(', ') }));
   const up = await new Promise(r => { const s = require('net').connect({ host: '127.0.0.1', port: cfg.port }); s.on('connect', () => { s.destroy(); r(true); }); s.on('error', () => r(false)); });
-  if (cfg.role === 'hub') ok(up, `board port ${cfg.port} ${up ? 'answers' : 'is silent (hub serve starts it; hooks start it on demand)'}`);
-  for (const n of cfg.nodes) ok(!!n.token, `node ${n.id}: ${n.transport}${n.tunnelPort ? ', tunnel ' + n.tunnelPort : ''}${n.token ? ', token set' : ' - no token: any local process on the node can speak for it'}`);
-  if (cfg.role === 'node') ok(!!cfg.hubUrl && !!cfg.token, `hub ${cfg.hubUrl || '(hubUrl missing)'}${cfg.token ? ', token set' : ', no token'}`);
+  if (cfg.role === 'hub') ok(up, T('cli.doc.board', { port: cfg.port, state: up ? T('cli.doc.boardUp') : T('cli.doc.boardDown') }));
+  for (const n of cfg.nodes) ok(!!n.token, T('cli.doc.nodeRow', { id: n.id, transport: n.transport, tunnel: n.tunnelPort ? T('cli.doc.tunnel', { port: n.tunnelPort }) : '', token: n.token ? T('cli.doc.tokenSet') : T('cli.doc.nodeNoToken') }));
+  if (cfg.role === 'node') ok(!!cfg.hubUrl && !!cfg.token, T('cli.doc.hub', { url: cfg.hubUrl || T('cli.doc.hubUrlMissing'), token: cfg.token ? T('cli.doc.tokenSet') : T('cli.doc.noToken') }));
   const ssh = require('../lib/transport/ssh-reverse.cjs').sshPath(cfg);
-  ok(true, `ssh client: ${ssh}`);
+  ok(true, T('cli.doc.ssh', { path: ssh }));
   const shim = path.join(cfg.home, 'bin', 'hub.cjs');
-  ok(fs.existsSync(shim), `shim ${shim}${fs.existsSync(shim) ? '' : ' - written on the first SessionStart or install-hooks'}`);
+  ok(fs.existsSync(shim), T('cli.doc.shim', { file: shim, missing: fs.existsSync(shim) ? '' : T('cli.doc.shimMissing') }));
   for (const ag of ['claude', 'codex', 'cursor']) {
     const f = require('../lib/install-hooks.cjs').defaultFile(ag);
     let has = false;
     try { has = fs.readFileSync(f, 'utf8').includes('unreal-agent-hub'); } catch (_) {}
-    lines.push(`info ${ag} hooks in ${f}: ${has ? 'installed' : 'not installed (fine when the plugin is used)'}`);
+    lines.push('info ' + T('cli.doc.hooks', { agent: ag, file: f, state: has ? T('cli.doc.hooksOn') : T('cli.doc.hooksOff') }));
   }
   print(lines.join('\n'));
 }

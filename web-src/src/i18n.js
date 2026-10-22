@@ -12,6 +12,19 @@ export function t(key, vars) {
   return s;
 }
 
+/**
+ * Text the hub sent: a plain string (shown as is), a message {k, v} built by lib/i18n.cjs (rendered here, in the
+ * viewer's language; values may be messages too), or an array of either joined with " · ".
+ */
+export function tm(m) {
+  if (m == null) return '';
+  if (Array.isArray(m)) return m.map(tm).filter(Boolean).join(' · ');
+  if (typeof m !== 'object' || typeof m.k !== 'string') return String(m);
+  const v = {};
+  for (const [k, x] of Object.entries(m.v || {})) v[k] = x && typeof x === 'object' ? tm(x) : x == null ? '' : x;
+  return t(m.k, v);
+}
+
 /** True when the dictionary has the key (a translation or English). */
 export const has = key => DICT[key] != null || EN[key] != null;
 

@@ -7,7 +7,7 @@
       "name": "unreal-agent-hub",
       "source": "./",
       "description": "Advisory locks with priorities, machine roles, presence and handover requests, a live board on 127.0.0.1:8790, hooks and an MCP server.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "category": "development",
       "tags": ["unreal-engine", "ue5", "gamedev", "multi-agent", "resource-lock", "job-queue", "dashboard"]
     }

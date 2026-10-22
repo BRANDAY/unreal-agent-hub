@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
-  ActionIcon, Accordion, Badge, Box, Button, Container, Grid, Group, Notification, Paper, SegmentedControl, Select, SimpleGrid, Stack,
+  ActionIcon, Accordion, Alert, Badge, Box, Button, Container, Grid, Group, Notification, Paper, SegmentedControl, Select, SimpleGrid, Stack,
   Text, ThemeIcon, Title, Tooltip, useComputedColorScheme, useMantineColorScheme,
 } from '@mantine/core';
-import { IconAlertTriangle, IconBell, IconCloud, IconHourglass, IconLock, IconMessages, IconMoon, IconRobot, IconSun } from '@tabler/icons-react';
+import { IconAlertTriangle, IconBell, IconCloud, IconPlugConnectedX, IconHourglass, IconLock, IconMessages, IconMoon, IconRobot, IconSun } from '@tabler/icons-react';
 import Asks, { useAskAlerts } from './Asks.jsx';
 import Resources, { Machines } from './Resources.jsx';
 import Chats from './Chats.jsx';
 import { Cloud, Subagents } from './Agents.jsx';
 import { ChatTime, Load, States, SubagentLoad } from './Charts.jsx';
 import Timeline from './Timeline.jsx';
-import { LANG_NAMES, loadLang, t } from './i18n.js';
+import { LANG_NAMES, loadLang, t, tm } from './i18n.js';
 import { hm, post, store, viewState } from './util.js';
 
 const HOURS = [1, 3, 12, 24];
@@ -62,7 +62,7 @@ export default function App() {
     const r = await post('api/' + kind, body);
     const done = { break: t('toast.broken'), open: t('toast.opening'), 'node/probe': t('toast.probing'), presence: body.on ? t('toast.here') : t('toast.left'),
       grant: t('toast.granted'), decline: t('toast.declined') };
-    setToast({ ok: r.ok, text: r.ok ? done[kind] || t('toast.done') : r.error || t('toast.failed') });
+    setToast({ ok: r.ok, text: r.ok ? done[kind] || t('toast.done') : tm(r.errorMsg || r.error) || t('toast.failed') });
     setTimeout(() => setToast(null), 3500);
   };
   useEffect(() => { const x = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(x); }, []);
@@ -126,7 +126,8 @@ export default function App() {
         </Group>
       </Group>
 
-      <Asks state={state} now={now} act={act} />
+      {live ? null : <Alert color="red" variant="light" mb="md" icon={<IconPlugConnectedX size={18} />}>{t('live.stale', { time: hm(state.at) })}</Alert>}
+      <Asks state={state} now={now} act={act} live={live} />
 
       <SimpleGrid cols={{ base: 2, sm: 3, lg: 6 }} spacing="md" mb="xl">
         <Kpi icon={IconAlertTriangle} color={need ? 'orange' : 'gray'} value={need} alert={need > 0} label={needText} />

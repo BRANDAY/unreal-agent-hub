@@ -1,7 +1,7 @@
 {
   "name": "unreal-agent-hub-board",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Sources of the board page (React + Mantine). `npm run build` writes ../web/index.html and ../web/assets/, which the hub serves; node_modules stays local and is not needed at runtime.",
   "type": "module",
   "scripts": {

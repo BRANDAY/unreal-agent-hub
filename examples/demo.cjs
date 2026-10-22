@@ -1,5 +1,5 @@
 // A demo board with made-up machines, chats and a day of history - for screenshots and for a first look.
-//   node examples/demo.cjs [--port 8791] [--home <folder>]
+//   node examples/demo.cjs [--port 8791] [--home <folder>] [--lang ru]
 // Everything lives in a temporary home folder (UAH_HOME); nothing touches ~/.unreal-agent-hub, ssh or other
 // machines: the demo node uses the "folder" transport and a probe written here.
 'use strict';
@@ -12,6 +12,43 @@ const opt = k => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1]
 const port = Number(opt('port') || 8791);
 const home = opt('home') || fs.mkdtempSync(path.join(os.tmpdir(), 'uah-demo-'));
 process.env.UAH_HOME = home;
+// --lang ru: the made-up machines, chats and notes in Russian too (other languages: English data, translated page).
+const lang = opt('lang') || 'en';
+const RU = {
+  'Studio PC': 'Студийный ПК',
+  'Laptop': 'Ноутбук',
+  'RTX 3060, 12 GB': 'RTX 3060, 12 ГБ',
+  'Editor restart': 'Перезапуск редактора',
+  'Cook / Packaged': 'Кук / сборка',
+  'Smoke tests': 'Смоук-тесты',
+  'C++ build': 'Сборка C++',
+  'Lighting pass for the harbor level': 'Свет на уровне гавани',
+  'Fix the cook crash in the shader cache': 'Падение кука в кэше шейдеров',
+  'Smoke tests for the loading screen': 'Смоук-тесты экрана загрузки',
+  'Retarget the run animations': 'Ретаргет анимаций бега',
+  'Night sky and fog in the old town': 'Ночное небо и туман в старом городе',
+  'Door portals between the levels': 'Порталы-двери между уровнями',
+  'AI patrol routes in the maze': 'Маршруты патруля ИИ в лабиринте',
+  'Main menu settings page': 'Страница настроек в меню',
+  'Footstep sounds on wet stone': 'Шаги по мокрому камню',
+  'Profile the laptop at Medium': 'Профилирование ноутбука на Medium',
+  'Bake the lighting for the harbor level and compare it with the reference shots': 'Запеки свет на уровне гавани и сравни с референсами',
+  'The cook dies in FShaderCodeLibrary - find why and fix it, then cook again': 'Кук падает в FShaderCodeLibrary — найди причину, почини и запусти кук снова',
+  'Claude needs your permission to use PowerShell': 'Claude ждёт разрешения на PowerShell',
+  'Retarget the run cycle from the reference skeleton': 'Перенеси цикл бега с референсного скелета',
+  'Build the fog volumes, then compare the old town at night with the reference': 'Собери объёмы тумана и сравни ночной старый город с референсом',
+  'The editor build and the fog research run in the background; I will report when both are done.': 'Сборка редактора и разбор тумана идут в фоне; отпишусь, когда закончатся оба.',
+  'Build the editor target': 'Сборка редактора',
+  'Find how the height fog is set up in the old town': 'Разобраться, как настроен высотный туман в старом городе',
+  'Compare the harbor shots with the reference': 'Сравнить кадры гавани с референсом',
+  'List the lights without shadows': 'Список источников света без теней',
+  'Read the portal code and list the level loads': 'Прочитать код порталов и перечислить загрузки уровней',
+  'Profile the portal streaming on a cloud runner': 'Профилирование стриминга порталов в облаке',
+  'cook, then copy to the laptop': 'кук, потом копия на ноутбук',
+  'smoke: loading': 'смоук: загрузка',
+  'person at Laptop': 'человек за ноутбуком',
+};
+const tr = s => (lang === 'ru' && RU[s]) || s;
 
 const U = require('../lib/util.cjs');
 const C = require('../lib/config.cjs');
@@ -26,16 +63,16 @@ fs.writeFileSync(path.join(project, 'MyGame.uproject'), '{}');
 U.writeJson(path.join(project, '.unreal-agent-hub.json'), {
   project: 'MyGame',
   resources: [
-    { id: 'editor', ttlMin: 30, label: 'Editor restart', icon: 'editor' },
-    { id: 'cook', ttlMin: 180, label: 'Cook / Packaged', icon: 'cook' },
-    { id: 'smoke', ttlMin: 90, label: 'Smoke tests', icon: 'smoke' },
+    { id: 'editor', ttlMin: 30, label: tr('Editor restart'), icon: 'editor' },
+    { id: 'cook', ttlMin: 180, label: tr('Cook / Packaged'), icon: 'cook' },
+    { id: 'smoke', ttlMin: 90, label: tr('Smoke tests'), icon: 'smoke' },
   ],
   gates: [{ tools: '^mcp__unreal-mcp__', resource: 'editor', holderPasses: true }],
 });
 U.writeJson(path.join(home, 'config.json'), {
-  id: 'studio', label: 'Studio PC', roles: ['hub', 'build', 'workstation'], port, lang: 'en',
-  resources: [{ id: 'cpp', ttlMin: 90, label: 'C++ build', icon: 'cpp' }],
-  nodes: [{ id: 'laptop', label: 'Laptop', detail: 'RTX 3060, 12 GB', roles: ['runner', 'workstation'], transport: 'folder', folder,
+  id: 'studio', label: tr('Studio PC'), roles: ['hub', 'build', 'workstation'], port, lang,
+  resources: [{ id: 'cpp', ttlMin: 90, label: tr('C++ build'), icon: 'cpp' }],
+  nodes: [{ id: 'laptop', label: tr('Laptop'), detail: tr('RTX 3060, 12 GB'), roles: ['runner', 'workstation'], transport: 'folder', folder,
     resources: [{ id: 'laptop', ttlMin: 180 }], profile: 'unreal', token: U.rand(16) }],
 });
 
@@ -46,15 +83,15 @@ const dir = cfg.stateDir;
 
 // --- a day of history ------------------------------------------------------------------------------------------
 const chats = [
-  { session: 'a1f0c2d4-1111', title: 'Lighting pass for the harbor level', agent: 'claude', host: 'local_7c1e9a52-aaaa' },
-  { session: 'b2e1d3c5-2222', title: 'Fix the cook crash in the shader cache', agent: 'codex' },
-  { session: 'c3d2e4f6-3333', title: 'Smoke tests for the loading screen', agent: 'claude', host: 'local_91b4d7e0-bbbb' },
-  { session: 'd4e3f5a7-4444', title: 'Retarget the run animations', agent: 'cursor' },
-  { session: 'e6a1b2c3-6666', title: 'Night sky and fog in the old town', agent: 'claude' },
-  { session: 'f7b2c3d4-7777', title: 'Door portals between the levels', agent: 'claude' },
-  { session: 'a8c3d4e5-8888', title: 'AI patrol routes in the maze', agent: 'codex' },
-  { session: 'b9d4e5f6-9999', title: 'Main menu settings page', agent: 'claude' },
-  { session: 'cae5f6a7-aaaa', title: 'Footstep sounds on wet stone', agent: 'cursor' },
+  { session: 'a1f0c2d4-1111', title: tr('Lighting pass for the harbor level'), agent: 'claude', host: 'local_7c1e9a52-aaaa' },
+  { session: 'b2e1d3c5-2222', title: tr('Fix the cook crash in the shader cache'), agent: 'codex' },
+  { session: 'c3d2e4f6-3333', title: tr('Smoke tests for the loading screen'), agent: 'claude', host: 'local_91b4d7e0-bbbb' },
+  { session: 'd4e3f5a7-4444', title: tr('Retarget the run animations'), agent: 'cursor' },
+  { session: 'e6a1b2c3-6666', title: tr('Night sky and fog in the old town'), agent: 'claude' },
+  { session: 'f7b2c3d4-7777', title: tr('Door portals between the levels'), agent: 'claude' },
+  { session: 'a8c3d4e5-8888', title: tr('AI patrol routes in the maze'), agent: 'codex' },
+  { session: 'b9d4e5f6-9999', title: tr('Main menu settings page'), agent: 'claude' },
+  { session: 'cae5f6a7-aaaa', title: tr('Footstep sounds on wet stone'), agent: 'cursor' },
 ];
 const events = [];
 const ev = (t, kind, res, tok, c, extra) => events.push(Object.assign({ t, kind, res, token: tok, mode: 'script', chat: c ? c.title : '', session: c ? c.session : '', agent: c ? c.agent : '', script: '', note: '' }, extra || {}));
@@ -71,7 +108,7 @@ const stage = (res, c, asked, len, also) => {
   const start = Math.max(asked, ...keys.map(k => freeAt[k] || 0));
   const script = SCRIPT[res];
   if (start > asked + 30e3) for (const k of keys) { const w = U.rand(4); ev(asked, 'WAIT', k, w, c, { script }); ev(start, 'GO', k, w, null); }
-  for (const k of keys) { const tok = U.rand(4); ev(start, 'TAKE', k, tok, c, { script, note: k === 'laptop' ? 'smoke: loading' : '' }); ev(start + len, 'FREE', k, tok, c); freeAt[k] = start + len + min; }
+  for (const k of keys) { const tok = U.rand(4); ev(start, 'TAKE', k, tok, c, { script, note: k === 'laptop' ? tr('smoke: loading') : '' }); ev(start + len, 'FREE', k, tok, c); freeAt[k] = start + len + min; }
   return start + len;
 };
 for (let t = now - 24 * 60 * min; t < now - 40 * min; t += (22 + rnd() * 30) * min) {
@@ -102,10 +139,10 @@ const chatRec = (c, state, extra) => U.writeJson(path.join(dir, 'chats', `${c.se
   session: c.session, title: c.title, agent: c.agent, machine: 'studio', project: 'MyGame', cwd: project, hostSession: c.host || '',
   state, updated: now - Math.round(rnd() * 20) * min, started: now - 5 * 3600e3,
 }, extra || {}));
-chatRec(chats[0], 'working', { lastPrompt: 'Bake the lighting for the harbor level and compare it with the reference shots' });
-chatRec(chats[1], 'working', { lastPrompt: 'The cook dies in FShaderCodeLibrary - find why and fix it, then cook again' });
-chatRec(chats[2], 'needs-owner', { notice: 'Claude needs your permission to use PowerShell' });
-chatRec(chats[3], 'idle', { lastPrompt: 'Retarget the run cycle from the reference skeleton', machine: 'laptop', node: 'laptop' });
+chatRec(chats[0], 'working', { lastPrompt: tr('Bake the lighting for the harbor level and compare it with the reference shots') });
+chatRec(chats[1], 'working', { lastPrompt: tr('The cook dies in FShaderCodeLibrary - find why and fix it, then cook again') });
+chatRec(chats[2], 'needs-owner', { notice: tr('Claude needs your permission to use PowerShell') });
+chatRec(chats[3], 'idle', { lastPrompt: tr('Retarget the run cycle from the reference skeleton'), machine: 'laptop', node: 'laptop' });
 for (const c of chats.slice(4)) chatRec(c, 'idle', { lastPrompt: c.title });
 
 // Background work (Claude Code): a chat whose turn ended with a build and a subagent still running, its subagents'
@@ -122,24 +159,24 @@ const sub = (c, id, meta, startedMin, lastMin) => {
   fs.utimesSync(m, at, at);
   return startedMin;
 };
-chatRec(chats[4], 'background', { lastPrompt: 'Build the fog volumes, then compare the old town at night with the reference', updated: now - 3 * min,
-  lastReply: 'The editor build and the fog research run in the background; I will report when both are done.',
+chatRec(chats[4], 'background', { lastPrompt: tr('Build the fog volumes, then compare the old town at night with the reference'), updated: now - 3 * min,
+  lastReply: tr('The editor build and the fog research run in the background; I will report when both are done.'),
   transcript: path.join(transcripts, `${chats[4].session}.jsonl`),
   background: [
-    { id: 'b7k2m9q', type: 'shell', status: 'running', description: 'Build the editor target', command: 'hub lock cpp -- Build.bat MyGameEditor Win64 Development' },
-    { id: 'fog01', type: 'subagent', status: 'running', description: 'Find how the height fog is set up in the old town', agentType: 'Explore' },
+    { id: 'b7k2m9q', type: 'shell', status: 'running', description: tr('Build the editor target'), command: 'hub lock cpp -- Build.bat MyGameEditor Win64 Development' },
+    { id: 'fog01', type: 'subagent', status: 'running', description: tr('Find how the height fog is set up in the old town'), agentType: 'Explore' },
   ] });
-sub(chats[4], 'fog01', { description: 'Find how the height fog is set up in the old town', agentType: 'Explore', model: 'haiku', requestShape: 'background' }, 12, 1);
-sub(chats[0], 'ref02', { description: 'Compare the harbor shots with the reference', agentType: 'general-purpose', model: 'sonnet' }, 6, 0.5);
-sub(chats[0], 'lum03', { description: 'List the lights without shadows', agentType: 'Explore', finished: true }, 70, 55);
-sub(chats[5], 'gate04', { description: 'Read the portal code and list the level loads', agentType: 'Plan', finished: true }, 140, 120);
-chatRec(chats[0], 'working', { lastPrompt: 'Bake the lighting for the harbor level and compare it with the reference shots', transcript: path.join(transcripts, `${chats[0].session}.jsonl`), updated: now - min });
-chatRec(chats[5], 'idle', { lastPrompt: 'Door portals between the levels', transcript: path.join(transcripts, `${chats[5].session}.jsonl`),
-  cloud: [{ title: 'Profile the portal streaming on a cloud runner', remote: 'session_01DemoCloudSessionAb', task: 'task_5e8a9c21', started: now - 95 * min }] });
-chatRec(chats[8], 'ended', { lastPrompt: 'Footstep sounds on wet stone', updated: now - 8 * 3600e3 });
+sub(chats[4], 'fog01', { description: tr('Find how the height fog is set up in the old town'), agentType: 'Explore', model: 'haiku', requestShape: 'background' }, 12, 1);
+sub(chats[0], 'ref02', { description: tr('Compare the harbor shots with the reference'), agentType: 'general-purpose', model: 'sonnet' }, 6, 0.5);
+sub(chats[0], 'lum03', { description: tr('List the lights without shadows'), agentType: 'Explore', finished: true }, 70, 55);
+sub(chats[5], 'gate04', { description: tr('Read the portal code and list the level loads'), agentType: 'Plan', finished: true }, 140, 120);
+chatRec(chats[0], 'working', { lastPrompt: tr('Bake the lighting for the harbor level and compare it with the reference shots'), transcript: path.join(transcripts, `${chats[0].session}.jsonl`), updated: now - min });
+chatRec(chats[5], 'idle', { lastPrompt: tr('Door portals between the levels'), transcript: path.join(transcripts, `${chats[5].session}.jsonl`),
+  cloud: [{ title: tr('Profile the portal streaming on a cloud runner'), remote: 'session_01DemoCloudSessionAb', task: 'task_5e8a9c21', started: now - 95 * min }] });
+chatRec(chats[8], 'ended', { lastPrompt: tr('Footstep sounds on wet stone'), updated: now - 8 * 3600e3 });
 U.appendLine(path.join(dir, 'chats.jsonl'), JSON.stringify({ t: now - 20 * min, session: chats[4].session, title: chats[4].title, agent: 'claude', event: 'UserPromptSubmit', state: 'working' }));
 U.appendLine(path.join(dir, 'chats.jsonl'), JSON.stringify({ t: now - 9 * min, session: chats[4].session, title: chats[4].title, agent: 'claude', event: 'Stop', state: 'background' }));
-U.writeJson(path.join(dir, 'chats', 'e5f4a6b8-5555.json'), { session: 'e5f4a6b8-5555', title: 'Profile the laptop at Medium', agent: 'claude', machine: 'laptop', node: 'laptop', project: 'MyGame', state: 'working', updated: now - 2 * min, lastPrompt: 'Measure the frame time on the laptop' });
+U.writeJson(path.join(dir, 'chats', 'e5f4a6b8-5555.json'), { session: 'e5f4a6b8-5555', title: tr('Profile the laptop at Medium'), agent: 'claude', machine: 'laptop', node: 'laptop', project: 'MyGame', state: 'working', updated: now - 2 * min, lastPrompt: 'Measure the frame time on the laptop' });
 
 const take = (key, rec, ago) => {
   const r = store.tryTake(key, Object.assign({ token: U.rand(6), pid: process.pid, machine: 'studio' }, rec), {});
@@ -151,7 +188,7 @@ const take = (key, rec, ago) => {
   return r;
 };
 take('cpp', { mode: 'script', chat: chats[1].title, session: chats[1].session, agent: 'codex', script: 'build.ps1', note: 'MyGameEditor Development', ttlMin: 90 }, 7);
-take('MyGame~cook', { mode: 'hold', chat: chats[0].title, session: chats[0].session, agent: 'claude', hostSession: chats[0].host, script: 'hub hold', note: 'cook, then copy to the laptop', ttlMin: 180 }, 38);
+take('MyGame~cook', { mode: 'hold', chat: chats[0].title, session: chats[0].session, agent: 'claude', hostSession: chats[0].host, script: 'hub hold', note: tr('cook, then copy to the laptop'), ttlMin: 180 }, 38);
 store.writeWaiter('MyGame~cook', { token: U.rand(4), mode: 'script', chat: chats[2].title, session: chats[2].session, agent: 'claude', pid: process.pid, script: 'package.ps1', since: now - 12 * min });
 store.writeWaiter('cpp', { token: U.rand(4), mode: 'gate', chat: chats[0].title, session: chats[0].session, agent: 'claude', pid: process.pid, script: 'Bash: UnrealBuildTool', since: now - 3 * min });
 
@@ -160,13 +197,14 @@ U.writeJson(path.join(folder, 'laptop', 'probe.json'), { at: now, host: 'laptop'
   desktop: [{ name: 'UnrealEditor.exe', pid: 4412, memMB: 2900, project: 'MyGame', since: now - 52 * min }], remote: [],
   gpu: { name: 'NVIDIA GeForce RTX 3060', usedMB: 11640, totalMB: 12288, util: 63 }, cpuPct: null, chats: 2 });
 require('../lib/roles.cjs').saveProbe(cfg, 'laptop', U.readJson(path.join(folder, 'laptop', 'probe.json')), '', 'board');
-take('laptop', { mode: 'presence', chat: 'person at Laptop', node: 'laptop', machine: 'laptop', note: 'board', ttlMin: 180 }, 52);
+take('laptop', { mode: 'presence', chat: tr('person at Laptop'), node: 'laptop', machine: 'laptop', note: 'board', ttlMin: 180 }, 52);
 const runTok = U.rand(5);
 const w = store.writeWaiter('laptop', { token: runTok, mode: 'script', chat: chats[2].title, session: chats[2].session, agent: 'claude', pid: process.pid,
-  script: 'remote_run.ps1', note: 'smoke: loading', machine: 'studio', since: now - 4 * min, blocked: 'human', blockedAt: now }).waiter;
-require('../lib/handover.cjs').ask(store, cfg, 'laptop', w, 'someone is using Laptop (UnrealEditor - MyGame - GPU 11640/12288 MB)');
+  script: 'remote_run.ps1', note: tr('smoke: loading'), machine: 'studio', since: now - 4 * min, blocked: 'human', blockedAt: now }).waiter;
+const busy = require('../lib/roles.cjs').humanBusy(cfg, cfg.nodes.find(x => x.id === 'laptop'), require('../lib/roles.cjs').readProbe(cfg, 'laptop'));
+require('../lib/handover.cjs').ask(store, cfg, 'laptop', w, busy.text, busy.msg);
 const a = store.readAsk('laptop', runTok); a.since = now - 4 * min; store.writeAsk('laptop', a);
-require('../lib/notify.cjs').send(cfg, { kind: 'return', key: 'laptop', ask: { chat: 'Profile the laptop at Medium', token: 'old' }, heldMs: 14 * min });
+require('../lib/notify.cjs').send(cfg, { kind: 'return', key: 'laptop', ask: { chat: tr('Profile the laptop at Medium'), token: 'old' }, heldMs: 14 * min });
 
 // Keep the demo waiters alive (their pid is this process) and serve the board.
 setInterval(() => {

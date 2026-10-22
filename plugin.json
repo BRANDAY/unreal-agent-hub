@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "unreal-agent-hub",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A queue for shared resources of AI coding agents (Codex, Claude Code, Cursor) and scripts: the Unreal editor, C++ builds, cooks, GPU machines. Advisory locks with priorities, machine roles, presence and a live board.",
   "author": { "name": "BRANDAY" },
   "homepage": "https://github.com/BRANDAY/unreal-agent-hub",

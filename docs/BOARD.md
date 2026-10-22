@@ -67,6 +67,28 @@ The board is available in English, German, French, Italian, Spanish and Russian 
 4. the browser's language;
 5. English.
 
+Text the hub itself produces and the board shows - why a run waits, why a lock is stale, who holds a resource, why an
+action failed - comes as a message (`{ "k": "<key>", "v": { ... } }`) next to the plain text (`blockedByMsg`,
+`staleMsg`, `errorMsg`, `humanMsg`, and the entries of a probe's `load.why`), so the page shows it in the viewer's
+language even when the hub speaks another one. What people typed - chat titles, notes, machine and resource labels -
+is shown as written.
+
+### Adding or fixing a translation
+
+All languages of the hub - the board, the CLI, hook messages, notifications - live in one flat file per language,
+`web/i18n/<lang>.json`; a missing key falls back to English, then to the key itself. To add a language, copy
+`en.json` to `<code>.json` (a two-letter code), translate the values and keep every `{placeholder}` as is. It shows up
+in the language menu and as a `lang` value by itself; the page fetches it at run time, so no rebuild is needed. Log
+files (`state/log.txt`, `events.jsonl`) stay in English on purpose, and so do the MCP tool descriptions (they are
+read by models).
+
+## Handover cards
+
+Each request card has a close button: it hides the card on this page only (the browser remembers it), the run keeps
+waiting, and the card comes back if the run asks again. "Show hidden requests" brings them back at once. While the
+page has no connection to the hub, a red banner says since when, the request buttons are disabled (an answer would
+not arrive), and the page reconnects by itself.
+
 ## Notifications
 
 When a new handover request appears, or a "machine is yours again" notice arrives, the page plays a short beep (880 Hz, about 0.18 s). If the browser granted notification permission (press "Enable notifications"), it also shows a browser notification titled with the board's name. The page only reacts to requests that appear while it is open; it does not notify about the state it found on load. For messages outside the browser see "Remote Control" in [TRANSPORTS.md](TRANSPORTS.md).

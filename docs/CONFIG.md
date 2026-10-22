@@ -28,7 +28,7 @@ Inspect the result with `hub config` (tokens are shown as `***`). The state fold
 | `label` | string | `id` | Name shown on the board |
 | `roles` | string[] | `["hub","build","workstation"]` | Machine roles of the hub itself: `hub`, `build`, `workstation`, `runner` |
 | `port` | number | `8790` | Board port (always bound to `127.0.0.1`) |
-| `lang` | string | `"en"` | Board language: `en de fr it es ru` |
+| `lang` | string | `"en"` | Language of the hub: CLI output, hook messages, notifications, and the board's default. `en de fr it es ru`, any language with a `web/i18n/<lang>.json`, or `auto` (the system locale) |
 | `name` | string | `"Unreal Agent Hub"` | Title of the board |
 | `operator.at` | string | the hub's `id` | Machine id the person usually sits at; default target of `hub here` and `hub_here` |
 | `machineResource` | string | none | Key of the hub's own machine resource. Needed for `@machine` on the hub and for presence on the hub |
@@ -138,7 +138,7 @@ Unknown names fail (`hub lock` exits 75). On the hub, resources of the hub itsel
 |---|---|---|
 | `UAH_HOME` | everything | Folder replacing `~/.unreal-agent-hub` (config, state, shim) |
 | `UAH_PORT` | board | Overrides `port` |
-| `UAH_LANG` | board | Overrides `lang` |
+| `UAH_LANG` | all | Overrides `lang` |
 | `UAH_ROLE` | config | Overrides `role` (`CLAUDE_PLUGIN_OPTION_ROLE` wins) |
 | `UAH_NODE_ID` | config | Overrides `id` (`CLAUDE_PLUGIN_OPTION_NODE_ID` wins) |
 | `UAH_HUB_URL` | node | Overrides `hubUrl` (`CLAUDE_PLUGIN_OPTION_HUB_URL` wins) |

@@ -2,7 +2,7 @@ import { Badge, Button, Card, Group, Progress, SimpleGrid, Stack, Text, ThemeIco
 import {
   IconBox, IconCode, IconCpu, IconDeviceDesktop, IconDeviceLaptop, IconExternalLink, IconFlame, IconHourglass, IconPackage, IconUser,
 } from '@tabler/icons-react';
-import { t } from './i18n.js';
+import { t, tm } from './i18n.js';
 import { ago, chatColor, dur, hm, human, modeText, resColorName, stateText, whoOf } from './util.js';
 
 const ICON = { editor: IconDeviceDesktop, cpp: IconCode, cook: IconPackage, smoke: IconFlame, machine: IconDeviceLaptop, gpu: IconCpu, box: IconBox, person: IconUser };
@@ -100,11 +100,11 @@ function ResourceCard({ r, now, history, act, hostOf }) {
           </Tooltip>
         ) : null}
         <Text size="xs" c="dimmed">
-          {t('res.since', { time: hm(since) })}{until > since ? ' · ' + t('res.ttlUntil', { time: hm(until) }) : ''}{l.stale ? ' · ' + t('res.staleWhy', { why: l.stale }) : ''}
+          {t('res.since', { time: hm(since) })}{until > since ? ' · ' + t('res.ttlUntil', { time: hm(until) }) : ''}{l.stale ? ' · ' + t('res.staleWhy', { why: tm(l.staleMsg || l.stale) }) : ''}
         </Text>
         {l.stale ? (
           <Button size="xs" color="red" variant="light" mt={4} onClick={() => {
-            if (confirm(t('res.breakConfirm', { name: r.label, who: whoOf(l), why: l.stale }))) act('break', { key: r.key, token: l.token });
+            if (confirm(t('res.breakConfirm', { name: r.label, who: whoOf(l), why: tm(l.staleMsg || l.stale) }))) act('break', { key: r.key, token: l.token });
           }}>{t('res.break')}</Button>
         ) : null}
       </Stack>
@@ -157,7 +157,7 @@ export function NodeCard({ n, r, now, act }) {
         )) : online && p.at ? (
           <Text size="xs" c="dimmed">{graceLeft > 0 ? t('node.grace', { ago: ago(p.lastBusyAt), left: human(graceLeft) }) : t('node.idle')}</Text>
         ) : null}
-        {p.load && p.load.busy ? <Text size="xs" c="teal">{t('node.load')}: {(p.load.why || []).join('; ')}</Text> : null}
+        {p.load && p.load.busy ? <Text size="xs" c="teal">{t('node.load')}: {tm(p.load.why || [])}</Text> : null}
         {g ? (<>
           <Text size="xs" c="dimmed" mt={4}>{t('node.gpu', { used: g.usedMB, total: g.totalMB, util: g.util })}</Text>
           <Progress value={gf * 100} color={gf > 0.8 ? 'orange' : 'teal'} size="sm" />

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.5.0 - 2026-10-22
+
+The whole hub speaks the chosen language, and handover cards can be closed.
+
+- **One set of translations for everything** a person reads: the board, the CLI (`hub help`, `status`, `hold`,
+  `release`, `break`, `claims`, `watch`, `node`, `doctor`...), hook messages and session-start notes,
+  notifications (board and duty chat), MCP tool results, the file gate and the watchdog's reasons. All of it lives in
+  `web/i18n/<lang>.json` (English, German, French, Italian, Spanish, Russian); `lib/i18n.cjs` renders it on the
+  server. The language is `lang` in the machine config or `UAH_LANG`, now also `auto` (the system locale). Log files,
+  `events.jsonl` and the MCP tool descriptions stay in English.
+- **Server text on the board follows the viewer's language:** why a run waits, why a lock is stale, who holds a
+  resource, why an action failed and a busy machine's load reasons come as messages (`blockedByMsg`, `staleMsg`,
+  `errorMsg`, `humanMsg`, probe `load.why`) next to the plain text, so a Russian page on an English hub shows Russian.
+  A probe from an older node (plain strings) still shows as written.
+- **Handover cards:** a close button hides a card (and a "yours again" notice) on that page only; the run keeps
+  waiting and the card returns if it asks again; "Show hidden requests" brings them back. Without a connection to
+  the hub a red banner says since when, and the answer buttons are disabled instead of failing silently.
+- **Demo:** `node examples/demo.cjs --lang ru` makes the machines, chats and notes Russian too; the demo's handover
+  reason now comes from the real busy check.
+- `lock.describe` names the mode in words (`chat on the machine` instead of `node-chat`).
+
 ## 0.4.0 - 2026-10-22
 
 What runs beside a chat, and a new board page.

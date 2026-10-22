@@ -56,6 +56,8 @@ shows the queue.
   desktop: remote runs queue and **ask**. You answer on the board or in any chat; when the run ends the machine
   comes back by itself with a "the machine is yours again" notice ([HANDOVER](docs/HANDOVER.md)).
 - **Load detector.** A workstation whose GPU memory or CPU is eaten by other apps counts as busy.
+- **Six languages.** Board, CLI, hook messages and notifications in English, German, French, Italian, Spanish and
+  Russian (`lang` in the config, or `auto`); the board follows each viewer's choice ([BOARD](docs/BOARD.md#languages)).
 - **Claude Code, Codex and Cursor.** One hook command for all three, with each agent's payload and answer format
   ([AGENTS](docs/AGENTS.md)); a Claude Code plugin with its own marketplace; `hub install-hooks --agent ...`.
 - **MCP server.** `hub_status`, `hub_hold`, `hub_release`, `hub_here`, `hub_grant`, `hub_decline` ([MCP](docs/MCP.md)).
