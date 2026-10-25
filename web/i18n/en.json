@@ -210,7 +210,7 @@
   "cli.help.lock": "run a command while holding <res> (like flock); several are taken\nin the order given (\"cpp,cook\": a packaging run holds both)",
   "cli.help.hold": "hold <res> for this chat until release / its agent exits / TTL",
   "cli.help.release": "release a hold of this chat (--force: anyone's)",
-  "cli.help.break": "drop a stale lock (--force: also a live one; ask its owner first)",
+  "cli.help.break": "drop a stale lock (--force: also a live one; ask its owner first; --place N: only that place)",
   "cli.help.here": "\"I am sitting at this machine\" (presence)",
   "cli.help.claims": "files claimed by chats (file gate); release frees one by hand",
   "cli.help.watch": "the project app (editor): state; down = closed by a chat, comes back",
@@ -417,5 +417,14 @@
   "stamp.mine": "\"{name}\" is this chat's own ({at})",
   "stamp.other": "\"{name}\" is from {chat}, {at}, not yours",
   "stamp.commit": "commit {commit}",
-  "stamp.dirty": "{n} uncommitted files"
+  "stamp.dirty": "{n} uncommitted files",
+  "lock.place": "place {place}/{slots}",
+  "lock.whole": "all {slots} places",
+  "err.noHold": "{key} is taken only for the run that uses it: a script takes it (hub lock / take), a hold across other work is refused",
+  "status.places": "{used}/{slots} places taken",
+  "pill.places": "{used}/{slots}",
+  "res.place": "place {place}",
+  "res.whole": "all places",
+  "res.placesHint": "{slots} places: a run takes one (--shared), a measurement takes all of them",
+  "res.runOnly": "Taken only for the run itself; hold is refused"
 }

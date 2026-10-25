@@ -38,7 +38,7 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `hub doctor` | Check the setup |
 | `hub version` | Print the version |
 
-`hub status --json` prints an array; each row has `key`, `label`, `scope`, `node`, `holder`, `queue`, `asks` and `machine`. `hub config` always prints JSON.
+`hub status --json` prints an array; each row has `key`, `label`, `scope`, `node`, `holder`, `queue`, `asks` and `machine`, and for places `slots`, `hold` and `holders` (one record per place). `hub config` always prints JSON.
 
 ## Options for `lock`, `hold` and `take`
 
@@ -51,6 +51,7 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `--priority N` | Override the base priority of this waiter ([ROLES.md](ROLES.md)) |
 | `--ask` / `--no-ask` | Force or forbid a handover request when a person is in the way (default: `handover.ask`) |
 | `--chat NAME` | Chat name shown on the board |
+| `--shared` | Take one place of a resource with `slots` > 1; without it a take holds every place ([CONFIG.md](CONFIG.md#resources)) |
 
 While waiting, a line is printed to stderr every minute: `[hub] <key> is busy: <holder>. Waiting...`. When the resource is taken after more than six seconds, `[hub] took <key> after N min.` is printed.
 
@@ -80,11 +81,13 @@ hub hold editor --note "rebuild cycle"
 hub release editor
 ```
 
+A resource with `hold: false` refuses holds (exit 75): it is taken only for the run itself, by `hub lock` or `hub take`.
+
 Holds taken by hooks end at `Stop` and `SessionEnd`; holds taken with `hub hold` or `hub_hold` do not end at the end of a turn, only at release, owner exit, or TTL.
 
 ## `hub break`
 
-A stale lock (TTL over, or its process gone) is removed without `--force`. A live lock needs `--force`; the command prints that nothing here stops processes. Do not force-break another chat's lock without asking its owner.
+A stale lock (TTL over, or its process gone) is removed without `--force`. On a resource with places, `--force` drops every place; `--place N` only that one. A live lock needs `--force`; the command prints that nothing here stops processes. Do not force-break another chat's lock without asking its owner.
 
 ## `hub here`
 

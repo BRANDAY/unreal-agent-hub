@@ -210,7 +210,7 @@
   "cli.help.lock": "lancer une commande en tenant <res> (comme flock) ; plusieurs sont prises\ndans l'ordre indiqué (« cpp,cook » : une exécution de packaging tient les deux)",
   "cli.help.hold": "tenir <res> pour ce chat jusqu'à release / la fin de son agent / TTL",
   "cli.help.release": "libérer un hold de ce chat (--force : celui de n'importe qui)",
-  "cli.help.break": "supprimer un verrou périmé (--force : même un verrou actif ; demander d'abord à son propriétaire)",
+  "cli.help.break": "supprimer un verrou périmé (--force : même un verrou actif ; demander d'abord à son propriétaire ; --place N : seulement cette place)",
   "cli.help.here": "« Je suis devant cette machine » (présence)",
   "cli.help.claims": "fichiers revendiqués par des chats (barrière de fichiers) ; release en libère un à la main",
   "cli.help.watch": "l'application du projet (éditeur) : état ; down = fermée par un chat, elle revient",
@@ -417,5 +417,14 @@
   "stamp.mine": "\"{name}\" vient de ce chat ({at})",
   "stamp.other": "\"{name}\" vient de {chat}, {at}, pas de vous",
   "stamp.commit": "commit {commit}",
-  "stamp.dirty": "{n} fichiers non commités"
+  "stamp.dirty": "{n} fichiers non commités",
+  "lock.place": "place {place}/{slots}",
+  "lock.whole": "les {slots} places",
+  "err.noHold": "{key} ne se prend que pour l'exécution qui l'utilise : un script le prend (hub lock / take), une réservation pendant d'autres travaux est refusée",
+  "status.places": "{used}/{slots} places prises",
+  "pill.places": "{used}/{slots}",
+  "res.place": "place {place}",
+  "res.whole": "toutes les places",
+  "res.placesHint": "{slots} places : une exécution en prend une (--shared), une mesure les prend toutes",
+  "res.runOnly": "Pris seulement pour l'exécution ; hold est refusé"
 }

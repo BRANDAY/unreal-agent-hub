@@ -107,9 +107,12 @@ export default function Timeline({ state, now, win, setTip }) {
                         onMouseMove={e => tip(e, [t('tl.' + iv.kind) + ': ' + who, hm(iv.start)])} onMouseLeave={() => setTip(null)} />;
                     }
                     const { x, w } = bar(iv.start, iv.end == null ? now : iv.end);
-                    const lines = [(iv.kind === 'hold' ? t('tl.holds') : t('tl.waits')) + ': ' + who, (iv.script || '') + (iv.note ? ' · ' + iv.note : ''), when(iv)];
+                    const placeText = iv.slots > 1 ? (iv.place ? t('res.place', { place: iv.place }) : t('res.whole')) : '';
+                    const lines = [(iv.kind === 'hold' ? t('tl.holds') : t('tl.waits')) + ': ' + who + (placeText ? ' · ' + placeText : ''), (iv.script || '') + (iv.note ? ' · ' + iv.note : ''), when(iv)];
+                    // A place of a resource with places gets its own band of the row; a whole take fills the row.
+                    const n = r.slots > 1 && iv.place ? r.slots : 1, band = (RH - 10) / n, by = y + 5 + (n > 1 ? (iv.place - 1) * band : 0);
                     return iv.kind === 'hold'
-                      ? <rect key={k} className="hit" x={x} y={y + 5} width={w} height={RH - 10} rx="4" fill={iv.mode === 'presence' ? 'var(--mantine-color-yellow-6)' : resColor(r)}
+                      ? <rect key={k} className="hit" x={x} y={by} width={w} height={Math.max(3, band - (n > 1 ? 1 : 0))} rx={n > 1 ? 2 : 4} fill={iv.mode === 'presence' ? 'var(--mantine-color-yellow-6)' : resColor(r)}
                         opacity={iv.end == null ? 1 : 0.8} onMouseMove={e => tip(e, lines)} onMouseLeave={() => setTip(null)} />
                       : <rect key={k} className="hit" x={x} y={y + RH - 9} width={w} height="5" rx="2" fill="url(#hatch)" onMouseMove={e => tip(e, lines)} onMouseLeave={() => setTip(null)} />;
                   })}

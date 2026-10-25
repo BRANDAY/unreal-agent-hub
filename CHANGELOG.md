@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0 - 2026-10-25
+
+Runs share a resource side by side, and a resource can be kept for the run itself.
+
+- **Places** (`slots: N` on a resource, [PROTOCOL.md](docs/PROTOCOL.md#6-places)): `<key>.json` is place 1,
+  `<key>.<n>.json` the others. `hub lock|take --shared` (PowerShell `-Shared`) takes one free place; any other take
+  and every hold take all of them under one token. A shared take does not slip past a whole take waiting ahead of it;
+  shared waiters ahead stop it only while they would use up the free places. Release, refresh and stale-break act on
+  every place of the token and never move another holder's place aside. `hub break --force --place N` drops one place.
+- **`hold: false`**: `hub hold` and `hub_hold` refuse such a resource (exit 75), it is taken only by the run that uses
+  it. Hook call holds are not affected.
+- **Board**: a resource with places shows `k/N`, one row per holder (`place n` or `all places`) with its own stale
+  button; the timeline draws each place as a band of the resource's row. `hub status` prints `k/N` and one line per
+  holder; `--json` adds `slots`, `hold` and `holders`.
+- Example overlay: `smoke` with two places and `hold: false`. `AGENTS.snippet.md`: one place per run, each run in
+  its own output folder; never hold a run-only resource over other work.
+- A resource id ending in `.<digits>` becomes `-<digits>` (that name is a place).
+- Tests 66/66 (`test/places.test.cjs` new: places, queue order, `hold: false`, status, a four-process race).
+
 ## 0.6.1 - 2026-10-25
 
 - **PowerShell module: chat names in any alphabet.** `Invoke-HubCli` read Node's UTF-8 output in the console's

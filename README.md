@@ -51,6 +51,9 @@ shows the queue.
   call, so it never lands in the middle of another chat's work ([PROFILES](docs/PROFILES.md#app-wide-calls)).
 - **Whose build is this?** Build scripts stamp what they made (`hub stamp build`); a smoke test hears "not yours",
   and a required check refuses another chat's build (`hub whose build --require`, [CLI](docs/CLI.md#hub-stamp-and-hub-whose)).
+- **Places: runs side by side.** A resource with `slots: 2` lets two smoke runs go at once (`hub lock smoke --shared`),
+  while a measurement still takes the whole machine; the board shows `k/N`. `hold: false` keeps a resource for the run
+  itself, so no chat parks it over a whole build-and-check chain ([CONFIG](docs/CONFIG.md#resources)).
 - **One protocol, any language.** Plain JSON files in `~/.unreal-agent-hub/state`, atomic create and
   rename-aside break, no mutex ([PROTOCOL](docs/PROTOCOL.md)). Node CLI, PowerShell module, MCP tools - all equal.
 - **Priorities without preemption.** A person at the machine > a chat on that machine > a chat's hold > scripts;

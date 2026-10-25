@@ -210,7 +210,7 @@
   "cli.help.lock": "eseguire un comando tenendo <res> (come flock); più risorse vengono prese\nnell'ordine indicato («cpp,cook»: un'esecuzione di packaging le tiene entrambe)",
   "cli.help.hold": "tenere <res> per questa chat finché release / finisce il suo agente / TTL",
   "cli.help.release": "rilasciare un hold di questa chat (--force: quello di chiunque)",
-  "cli.help.break": "togliere un lock scaduto (--force: anche uno attivo; chiedi prima al suo proprietario)",
+  "cli.help.break": "togliere un lock scaduto (--force: anche uno attivo; chiedi prima al suo proprietario; --place N: solo quel posto)",
   "cli.help.here": "«Sono seduto a questa macchina» (presenza)",
   "cli.help.claims": "file rivendicati dalle chat (barriera sui file); release ne libera uno a mano",
   "cli.help.watch": "l'app del progetto (editor): stato; down = chiusa da una chat, torna da sola",
@@ -417,5 +417,14 @@
   "stamp.mine": "\"{name}\" è di questa chat ({at})",
   "stamp.other": "\"{name}\" è di {chat}, {at}, non tuo",
   "stamp.commit": "commit {commit}",
-  "stamp.dirty": "{n} file non committati"
+  "stamp.dirty": "{n} file non committati",
+  "lock.place": "posto {place}/{slots}",
+  "lock.whole": "tutti i {slots} posti",
+  "err.noHold": "{key} si prende solo per l'esecuzione che lo usa: lo prende uno script (hub lock / take), una prenotazione durante altro lavoro è rifiutata",
+  "status.places": "{used}/{slots} posti occupati",
+  "pill.places": "{used}/{slots}",
+  "res.place": "posto {place}",
+  "res.whole": "tutti i posti",
+  "res.placesHint": "{slots} posti: un'esecuzione ne prende uno (--shared), una misura li prende tutti",
+  "res.runOnly": "Preso solo per l'esecuzione; hold è rifiutato"
 }

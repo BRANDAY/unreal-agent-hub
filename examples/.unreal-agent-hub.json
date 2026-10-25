@@ -3,7 +3,7 @@
   "profile": "unreal",
   "resources": [
     { "id": "cook",    "scope": "project", "ttlMin": 180, "label": "Cook / Packaged", "icon": "cook" },
-    { "id": "smoke",   "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke" },
+    { "id": "smoke",   "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke", "slots": 2, "hold": false },
     { "id": "editor",  "scope": "project", "ttlMin": 30,  "label": "Editor",          "icon": "editor" },
     { "id": "blender", "scope": "project", "ttlMin": 30,  "label": "Blender (live)",  "icon": "blender" }
   ],

@@ -11,7 +11,9 @@ This project shares the editor, C++ builds, cooks and test machines with other a
 - Before a required check ask whose build it runs on: `hub whose build --require` fails when another chat made it.
 - A live Blender (its MCP tools) is shared the same way: `hub hold blender` while you work in it; headless Blender
   runs need no lock.
-- One heavy command: `hub lock <resource> -- <command>` (waits its turn, runs, releases).
+- One heavy command: `hub lock <resource> -- <command>` (waits its turn, runs, releases). A resource with places
+  (`k/N` on the board) takes one place with `--shared`; each such run writes into its own output folder.
+- A resource that refuses `hub hold` is taken only for the run itself: never hold it over a build, checks or analysis.
 - Several steps that must not be interrupted: `hub hold <resource>` ... `hub release <resource>`
   (or `hub_hold` / `hub_release`).
 - "Resource ... is busy" means: do other work and try later. Never stop processes you did not start and

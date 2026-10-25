@@ -43,6 +43,7 @@ function Enter-HubLock {
     param(
         [Parameter(Mandatory, Position = 0)][string]$Resource,
         [switch]$NoWait,
+        [switch]$Shared,
         [int]$TtlMin = 0,
         [string]$Note = '',
         [int]$WaitMin = 0,
@@ -55,6 +56,7 @@ function Enter-HubLock {
     $script = if ($caller) { Split-Path $caller -Leaf } else { 'powershell' }
     $a = @('take', $Resource, '--pid', "$PID", '--script', $script)
     if ($NoWait) { $a += '--no-wait' }
+    if ($Shared) { $a += '--shared' }
     if ($TtlMin -gt 0) { $a += @('--ttl', "$TtlMin") }
     if ($Note) { $a += @('--note', $Note) }
     if ($WaitMin -gt 0) { $a += @('--wait-min', "$WaitMin") }
@@ -98,10 +100,10 @@ function Invoke-HubLocked {
     Invoke-HubLocked cpp, cook { & .\package.ps1 } -TtlMin 180   # a packaging run holds the build and the cook
     #>
     param([Parameter(Mandatory, Position = 0)][string[]]$Resource, [Parameter(Mandatory, Position = 1)][scriptblock]$Body,
-          [string]$Note = '', [switch]$NoWait, [int]$TtlMin = 0)
+          [string]$Note = '', [switch]$NoWait, [switch]$Shared, [int]$TtlMin = 0)
     $held = New-Object System.Collections.ArrayList
     try {
-        foreach ($r in $Resource) { [void]$held.Add((Enter-HubLock $r -Note $Note -NoWait:$NoWait -TtlMin $TtlMin)) }
+        foreach ($r in $Resource) { [void]$held.Add((Enter-HubLock $r -Note $Note -NoWait:$NoWait -Shared:$Shared -TtlMin $TtlMin)) }
         & $Body
     } finally {
         for ($i = $held.Count - 1; $i -ge 0; $i--) { Exit-HubLock $held[$i] }

@@ -74,9 +74,26 @@ Node-side keys (in the config of a machine with `role: "node"`):
 | `ttlMin` | `60` | Hold or lock lifetime if the caller gives none |
 | `label` | `id` | Board name |
 | `icon` | `""` | Board icon: `cpp cook machine smoke editor gpu box`; unknown names fall back to the resource id, then to a box |
+| `slots` | `1` | Places: how many runs may hold it side by side. A run takes one place with `--shared` (PowerShell `-Shared`); any other take and every hold take all of them. The board shows `k/N` ([PROTOCOL.md](PROTOCOL.md#6-places)) |
+| `hold` | `true` | `false` refuses `hub hold` / `hub_hold`: the resource is taken only by the run that uses it (`hub lock`, `hub take`), never across a chain of other work |
 | `color` | by icon | Board colour: a Mantine colour name (`blue`, `orange`, `violet`, `pink`, `teal`, `grape`, `lime`, `cyan`, `yellow`, `indigo`, `red`, `green`, `gray`) or any CSS colour |
 
-The internal key is `id` for machine resources and `<project>~<id>` for project resources.
+The internal key is `id` for machine resources and `<project>~<id>` for project resources. An `id` ending in
+`.<digits>` becomes `-<digits>`: `<key>.<n>.json` is the file of place `n`.
+
+Two smoke runs side by side, a measurement alone, and no hold over a whole build-and-check chain:
+
+```json
+{ "id": "smoke", "scope": "project", "ttlMin": 90, "slots": 2, "hold": false, "label": "Smoke tests", "icon": "smoke" }
+```
+
+```bash
+hub lock smoke --shared -- ./run_smoke.sh loading     # one place; a second run goes beside it
+hub lock smoke -- ./run_smoke.sh perf --quality 2      # both places: a measurement wants the machine alone
+```
+
+Each run that shares a resource must write into its own folder (a per-run output directory passed to the game or
+tool), or the runs overwrite each other's reports.
 
 ### `nodes[]`
 

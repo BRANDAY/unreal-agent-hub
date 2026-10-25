@@ -14,7 +14,7 @@ const HELP_CMDS = [
   ['lock <res>[,<res>...] [opts] -- <cmd>', 'lock', 2],
   ['hold <res> [opts]', 'hold'],
   ['release <res> [--force]', 'release'],
-  ['break <res> [--force]', 'break'],
+  ['break <res> [--force] [--place N]', 'break'],
   ['here [<machine>] [--off] [--ttl N]', 'here'],
   ['claims [--json] | claims release <path>', 'claims'],
   ['watch [status|down|up] [--note TEXT]', 'watch'],
@@ -45,7 +45,7 @@ function help() {
     lines.push('  ' + (gap ? cmd + ' '.repeat(gap) : cmd.padEnd(40)) + first);
     for (const m of more) lines.push(' '.repeat(42) + m);
   }
-  lines.push('', T('cli.help.opts'), '  --ttl N  --note TEXT  --no-wait  --wait-min N  --priority N  --ask | --no-ask  --chat NAME', '',
+  lines.push('', T('cli.help.opts'), '  --ttl N  --note TEXT  --no-wait  --wait-min N  --priority N  --ask | --no-ask  --chat NAME  --shared', '',
     T('cli.help.resources'), T('cli.help.home', { home: C.home() }));
   return lines.join('\n');
 }
@@ -59,7 +59,7 @@ function parse(argv) {
       const k = a.slice(2);
       if (k.startsWith('no-')) { out[k] = true; continue; }
       const nxt = argv[i + 1];
-      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
+      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require', 'shared'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
     } else out._.push(a);
   }
   return out;
@@ -74,6 +74,7 @@ function acquireOpts(a, extra) {
     ttlMin: a.ttl ? Number(a.ttl) : undefined, note: typeof a.note === 'string' ? a.note : '', noWait: !!a['no-wait'],
     waitMin: a['wait-min'] ? Number(a['wait-min']) : undefined, priority: a.priority != null ? Number(a.priority) : undefined,
     ask: a.ask ? true : a['no-ask'] ? false : undefined, chat: typeof a.chat === 'string' ? a.chat : undefined,
+    shared: !!a.shared,
     onWait: (r, waited) => process.stderr.write(T('cli.waiting', { key: r.key, text: r.text,
       since: waited >= 60e3 ? T('cli.waitingSince', { n: Math.round(waited / 60e3) }) : '' }) + '\n'),
   }, extra || {});
@@ -225,7 +226,7 @@ async function main() {
       const { describe } = require('../lib/store.cjs');
       if (lock.stale) { const r = st.breakStale(key, lock.token, 'hub break'); return print(r.ok ? T('cli.brokeStale', { what: describe(lock), stale: lock.stale }) : T('cli.notBroken', { error: r.error })); }
       if (!a.force) die(T('cli.breakLive', { key, what: describe(lock) }));
-      const r = st.forceBreak(key, 'hub break --force');
+      const r = st.forceBreak(key, 'hub break --force', a.place ? Number(a.place) : 0);
       return print(r.ok ? T('cli.broke', { what: describe(lock) }) : T('cli.notBroken', { error: r.error }));
     }
     case 'claims': {

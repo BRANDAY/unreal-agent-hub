@@ -210,7 +210,7 @@
   "cli.help.lock": "einen Befehl ausführen, während <res> gehalten wird (wie flock); mehrere werden\nin der angegebenen Reihenfolge genommen („cpp,cook“: ein Paketierungslauf hält beide)",
   "cli.help.hold": "<res> für diesen Chat halten, bis release / sein Agent endet / TTL",
   "cli.help.release": "einen Hold dieses Chats freigeben (--force: jeden)",
-  "cli.help.break": "einen veralteten Lock entfernen (--force: auch einen aktiven; vorher den Besitzer fragen)",
+  "cli.help.break": "einen veralteten Lock entfernen (--force: auch einen aktiven; vorher den Besitzer fragen; --place N: nur dieser Platz)",
   "cli.help.here": "„Ich sitze an diesem Rechner“ (Anwesenheit)",
   "cli.help.claims": "von Chats beanspruchte Dateien (Dateischranke); release gibt eine von Hand frei",
   "cli.help.watch": "die Projekt-App (Editor): Zustand; down = von einem Chat geschlossen, kommt zurück",
@@ -417,5 +417,14 @@
   "stamp.mine": "\"{name}\" stammt von diesem Chat ({at})",
   "stamp.other": "\"{name}\" stammt von {chat}, {at}, nicht von Ihnen",
   "stamp.commit": "Commit {commit}",
-  "stamp.dirty": "{n} nicht committete Dateien"
+  "stamp.dirty": "{n} nicht committete Dateien",
+  "lock.place": "Platz {place}/{slots}",
+  "lock.whole": "alle {slots} Plätze",
+  "err.noHold": "{key} wird nur für den Lauf genommen, der es nutzt: ein Skript nimmt es (hub lock / take), ein Halten über andere Arbeit wird abgelehnt",
+  "status.places": "{used}/{slots} Plätze belegt",
+  "pill.places": "{used}/{slots}",
+  "res.place": "Platz {place}",
+  "res.whole": "alle Plätze",
+  "res.placesHint": "{slots} Plätze: ein Lauf nimmt einen (--shared), eine Messung alle",
+  "res.runOnly": "Nur für den Lauf selbst; hold wird abgelehnt"
 }

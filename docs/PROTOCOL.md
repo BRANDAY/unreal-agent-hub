@@ -12,7 +12,8 @@ scripts outside an agent (a build script, CI) find it too.
 
 | File | Meaning |
 |---|---|
-| `<key>.json` | the lock of resource `<key>`; absent = free |
+| `<key>.json` | the lock of resource `<key>`; absent = free. For a resource with places: place 1 |
+| `<key>.<n>.json` | place `n` (2..`slots`) of a resource with places ([section 6](#6-places)) |
 | `<key>.wait.<token>.json` | one waiter in the queue |
 | `<key>.ask.<token>.json` | a handover request to a person ([HANDOVER](HANDOVER.md)) |
 | `<key>.json.aside-<pid>-<rand>` | a lock moved aside while it is checked before removal; lives milliseconds |
@@ -22,7 +23,8 @@ scripts outside an agent (a build script, CI) find it too.
 | `log.txt` | the same events for people |
 | `chats/<session>.json`, `chats.jsonl` | chat status for the board |
 
-`<key>` is the resource id (`cpp`), or `<project>~<id>` for a project resource (`MyGame~editor`).
+`<key>` is the resource id (`cpp`), or `<project>~<id>` for a project resource (`MyGame~editor`). An id never ends
+in `.<digits>` (the config turns such a suffix into `-<digits>`): that name is a place.
 
 ## Records
 
@@ -117,12 +119,29 @@ removed after 10 s.
 
 `WAIT` -> `GO`/`LEAVE` and `TAKE` -> `FREE`/`BREAK` are tied by token; the board draws the timeline from them.
 
+## 6. Places
+
+A resource with `slots: N` (N > 1) has N places: `<key>.json` is place 1, `<key>.2.json` ... `<key>.N.json` the rest.
+A run that only needs one of them takes **one place** (`--shared`): the lowest free place, created as in section 1.
+Any other take (a measurement that wants the machine to itself, a hold) takes **every place** under one token,
+creating them in order; when a place turns out taken in between, it deletes the places it created and counts as a
+race. The record of a place carries `slots`, `shared` and `place`.
+
+- Free means: a shared take needs at least one place without a live lock; a whole take needs all of them.
+- Queue: a whole take waits for everyone ahead of it. A shared take waits for a whole take ahead of it - it does not
+  slip into a place that just freed while the whole take waits for the last one - and for shared waiters ahead only
+  while they would use up the free places.
+- Release, refresh and stale-break act on every place that holds the token. They read each place first and only
+  rename-aside a place whose token matches: another holder's place never leaves its name, even for a moment.
+- Reading "the lock" of the resource (gates, `hub status` headline) gives the first live place.
+- `hold: false` on a resource refuses holds (`hub hold`, `hub_hold`): it is taken only by the run that uses it.
+
 ## Writing a client in another language
 
 1. Resolve the folder (`UAH_HOME`), the key and the TTL from `hub config --json` or the config files.
 2. Take: write a temp file, `link` it to `<key>.json`; on `EEXIST`, read and apply section 1.
 3. Wait: write and refresh your waiter file; poll every 1-3 s; compute the order of section 3.
-4. Release: rename-aside, check the token, delete or link back.
+4. Release: rename-aside, check the token, delete or link back (on each place of a resource with places that holds it).
 5. Append to `events.jsonl` (`O_APPEND`, one line) and `log.txt`.
 
 Or simply call `hub take <res> --pid <your pid>` / `hub free <res> --token <t>` and let the Node client do it - that is

@@ -29,6 +29,7 @@ Takes the resource for the running script. It calls `hub take <Resource> --pid <
 |---|---|---|
 | `-Resource` (position 0) | resource name | Any name from [CONFIG.md](CONFIG.md#resource-names) |
 | `-NoWait` | `--no-wait` | Throw at once if busy |
+| `-Shared` | `--shared` | One place of a resource with places (`slots` > 1); without it the script takes all of them |
 | `-TtlMin N` | `--ttl N` | Lifetime in minutes |
 | `-Note TEXT` | `--note` | Shown on the board |
 | `-WaitMin N` | `--wait-min` | Give up after N minutes |
@@ -56,7 +57,7 @@ Returns the parsed output of `hub status --json`: one object per resource with `
 Get-HubStatus | Where-Object { $_.holder } | Select-Object key, @{n='who';e={ $_.holder.text }}
 ```
 
-### `Invoke-HubLocked <Resource[]> <ScriptBlock> [-Note] [-NoWait] [-TtlMin]`
+### `Invoke-HubLocked <Resource[]> <ScriptBlock> [-Note] [-NoWait] [-Shared] [-TtlMin]`
 
 Takes the resource, runs the block, and always releases:
 

@@ -63,14 +63,61 @@ function Queue({ waiters, now }) {
   );
 }
 
+// A resource with places (slots > 1): "k/N" and one short row per holder. A whole take holds every place under one
+// token, so it is one row that counts N.
+function Places({ r, now, act, hostOf }) {
+  const seen = new Set(), rows = [];
+  for (const l of r.locks || []) { if (!seen.has(l.token)) { seen.add(l.token); rows.push(l); } }
+  if (!rows.length) return <Text size="sm" c="dimmed">{t('res.notUsed')}</Text>;
+  return (
+    <Stack gap={6}>
+      {rows.map(l => (
+        <Stack key={l.token} gap={0}>
+          <Group justify="space-between" wrap="nowrap">
+            <Who name={whoOf(l)}><AgentBadge agent={l.agent} /></Who>
+            <Group gap={4} wrap="nowrap">
+              <Badge size="xs" variant="light" color={l.stale ? 'red' : 'gray'}>{l.shared ? t('res.place', { place: l.place || 1 }) : t('res.whole')}</Badge>
+              <OpenButton host={l.hostSession || hostOf(l.session)} act={act} compact />
+            </Group>
+          </Group>
+          <Text size="xs" c="dimmed" className="clamp1" title={`${l.script || ''} ${l.note || ''}`}>
+            {modeText(l.mode)}{l.mode === 'script' && l.script ? ' · ' + l.script : ''}{l.note ? ' · ' + l.note : ''} · {dur(now - l.since)}{l.stale ? ' · ' + t('res.staleWhy', { why: tm(l.staleMsg || l.stale) }) : ''}
+          </Text>
+          {l.stale ? (
+            <Button size="xs" color="red" variant="light" mt={2} onClick={() => {
+              if (confirm(t('res.breakConfirm', { name: r.label, who: whoOf(l), why: tm(l.staleMsg || l.stale) }))) act('break', { key: r.key, token: l.token });
+            }}>{t('res.break')}</Button>
+          ) : null}
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
+function placesUsed(r) {
+  const seen = new Set();
+  let used = 0;
+  for (const l of r.locks || []) {
+    if (l.stale || seen.has(l.token)) continue;
+    seen.add(l.token);
+    used += l.shared ? 1 : r.slots;
+  }
+  return Math.min(used, r.slots);
+}
+
 function ResourceCard({ r, now, history, act, hostOf }) {
   const l = r.lock;
+  const places = r.slots > 1;
   const person = l && !l.stale && l.mode === 'presence';
   const color = resColorName(r) || 'indigo';
   const Icon = iconOf(r);
-  const pill = !l ? ['gray', t('pill.free')] : l.stale ? ['red', t('pill.stale')] : person ? ['yellow', t('pill.person')] : [color, t('pill.busy')];
+  const used = places ? placesUsed(r) : 0;
+  const pill = places ? [!used ? 'gray' : used >= r.slots ? color : 'teal', t('pill.places', { used, slots: r.slots })]
+    : !l ? ['gray', t('pill.free')] : l.stale ? ['red', t('pill.stale')] : person ? ['yellow', t('pill.person')] : [color, t('pill.busy')];
   let body;
-  if (!l) {
+  if (places && (r.locks || []).length) {
+    body = <Places r={r} now={now} act={act} hostOf={hostOf} />;
+  } else if (!l) {
     const last = (history || []).filter(iv => iv.res === r.key && iv.kind === 'hold' && iv.end != null).sort((a, b) => b.end - a.end)[0];
     body = last ? (
       <Stack gap={2}>
@@ -117,7 +164,9 @@ function ResourceCard({ r, now, history, act, hostOf }) {
           <ThemeIcon variant="light" color={color} size="md"><Icon size={16} /></ThemeIcon>
           <Text fw={600} size="sm" className="clamp1" title={r.key}>{r.label}</Text>
         </Group>
-        <Badge color={pill[0]} variant={l ? 'filled' : 'light'} size="sm" style={{ flex: 'none' }}>{pill[1]}</Badge>
+        <Tooltip label={r.hold === false ? t('res.runOnly') : places ? t('res.placesHint', { slots: r.slots }) : pill[1]} disabled={!places && r.hold !== false}>
+          <Badge color={pill[0]} variant={(places ? used : l) ? 'filled' : 'light'} size="sm" style={{ flex: 'none' }}>{pill[1]}</Badge>
+        </Tooltip>
       </Group>
       {body}
       <Queue waiters={r.waiters} now={now} />
