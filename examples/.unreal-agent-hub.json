@@ -2,12 +2,15 @@
   "project": "MyGame",
   "profile": "unreal",
   "resources": [
-    { "id": "cook",   "scope": "project", "ttlMin": 180, "label": "Cook / Packaged", "icon": "cook" },
-    { "id": "smoke",  "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke" },
-    { "id": "editor", "scope": "project", "ttlMin": 30,  "label": "Editor restart",  "icon": "editor" }
+    { "id": "cook",    "scope": "project", "ttlMin": 180, "label": "Cook / Packaged", "icon": "cook" },
+    { "id": "smoke",   "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke" },
+    { "id": "editor",  "scope": "project", "ttlMin": 30,  "label": "Editor",          "icon": "editor" },
+    { "id": "blender", "scope": "project", "ttlMin": 30,  "label": "Blender (live)",  "icon": "blender" }
   ],
   "gates": [
-    { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait" },
+    { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait",
+      "calls": { "tools": ["reload_project_toolsets", { "tool": "pie_start_smoke", "until": "pie_collect_smoke" }, "pie_collect_smoke"] } },
+    { "tools": "^mcp__blender__", "resource": "blender", "mode": "wait" },
     { "commands": "\\\\Packaged\\\\|remote_run\\.ps1|run_smoke", "resource": "@node:laptop" }
   ],
   "files": { "claim": ["Config/*.ini", "Scripts/**", "Tools/**"], "free": ["**/*.md", "Config/DefaultGame.ini"] },

@@ -27,6 +27,20 @@
     "cleanExit": "Log file closed|LogExit: Exiting",
     "busy": ["cpp", "cook", "editor"]
   },
+  "calls": {
+    "tools": [
+      { "tool": "load_level", "stamp": "level", "arg": "level_path" },
+      { "tool": "save_assets", "emptyArg": "asset_paths" },
+      { "tool": "StartPIE", "until": "StopPIE" },
+      "StopPIE",
+      "edit_level_instance",
+      "commit_level_instance"
+    ],
+    "script": { "tool": "execute_tool_script", "arg": "script" },
+    "ttlMin": 5,
+    "spanTtlMin": 15,
+    "notes": ["build", "level"]
+  },
   "holdTtlMin": 60,
   "labels": {
     "en": { "busy": "Unreal is running" }, "de": { "busy": "Unreal läuft" }, "fr": { "busy": "Unreal est ouvert" },

@@ -103,4 +103,32 @@ function Invoke-HubLocked {
     }
 }
 
-Export-ModuleMember -Function Enter-HubLock, Exit-HubLock, Get-HubStatus, Invoke-HubLocked
+function Set-HubStamp {
+    <#
+    .SYNOPSIS
+    Records who made <Name> (a build): this chat, the time, the commit and the files' time and size.
+    Set-HubStamp build -Files 'Binaries/Win64/UnrealEditor-MyGame*.dll' -Note "$Target $Config"
+    #>
+    param([Parameter(Mandatory, Position = 0)][string]$Name, [string[]]$Files = @(), [string]$Note = '')
+    $a = @('stamp', $Name)
+    if ($Files.Count) { $a += @('--files', ($Files -join ',')) }
+    if ($Note) { $a += @('--note', $Note) }
+    $r = Invoke-HubCli $a
+    if ($r.ExitCode -ne 0) { Write-Warning "hub stamp $Name failed: $($r.Output)" }
+}
+
+function Assert-HubOwn {
+    <#
+    .SYNOPSIS
+    One line when <Name> was made by another chat (or outside the stamping script); with -Require a throw instead.
+    Assert-HubOwn build -Require:$RequireOwnBuild
+    #>
+    param([Parameter(Mandatory, Position = 0)][string]$Name, [switch]$Require)
+    $r = Invoke-HubCli @('whose', $Name, '--json')
+    $c = $r.Output | ConvertFrom-Json
+    if ($c.mine) { return }
+    if ($Require) { throw "hub: $($c.text) (-Require)" }
+    Write-Host "[hub] $($c.text)"
+}
+
+Export-ModuleMember -Function Enter-HubLock, Exit-HubLock, Get-HubStatus, Invoke-HubLocked, Set-HubStamp, Assert-HubOwn

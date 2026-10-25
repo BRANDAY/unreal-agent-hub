@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.0 - 2026-10-25
+
+Locks also cover what the previous holder left behind, and the editor's app-wide calls go in turn.
+
+- **App-wide calls of a `wait` gate** (`calls`, [PROFILES.md](docs/PROFILES.md#app-wide-calls)): a level load,
+  save-all (`save_assets` with no list), `StartPIE`...`StopPIE` and level-instance edits from a chat that does not hold
+  the editor take it for the call - a call hold (`by: hook-call`, TTL 5 min, PIE until `StopPIE`, 15 min) counted
+  per call and freed by the new PostToolUse / PostToolUseFailure hooks. Other chats' calls wait behind it; ordinary
+  calls of a free editor take nothing. A tool script (`execute_tool_script`) is searched for the same names. The
+  Unreal profile carries the engine's list; a project gate adds its own tools (`"calls": {"tools": [...]}`). A call
+  hold is not "a restart under way" for the app watch.
+- **Stamps** (`hub stamp <name>`, `hub whose <name> [--require]`, [CLI.md](docs/CLI.md#hub-stamp-and-hub-whose)): who
+  made a build - chat, time, commit, uncommitted files, the files' time and size. `whose` says "not yours" or
+  "unknown" (files changed since); `--require` exits 3. A level load stamps `level`; before an app-wide call the model
+  hears once (Claude Code: PreToolUse `additionalContext`) that the build or the open level is another chat's.
+  PowerShell: `Set-HubStamp`, `Assert-HubOwn`.
+- **A live Blender as a resource**: the example overlay gates `mcp__blender__*` on a project resource `blender`;
+  headless Blender runs are left alone ([PROFILES.md](docs/PROFILES.md#a-live-blender-next-to-the-editor)).
+- **Planning rule** in `AGENTS.snippet.md`: split a task into offline / editor / test machine first; one line each for
+  call holds, `hub whose` and Blender.
+- `install-hooks` and the plugin's `hooks.json` register PostToolUse and PostToolUseFailure for `mcp__.*` (was
+  `start_session` only). `store.refresh` takes a new `ttlMin` into the expiry.
+
 ## 0.5.0 - 2026-10-22
 
 The whole hub speaks the chosen language, and handover cards can be closed.

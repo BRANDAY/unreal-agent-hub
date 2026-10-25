@@ -197,11 +197,17 @@ The example sets `"machineResource": "studio"` with a resource `{ "id": "studio"
   "resources": [
     { "id": "cook",  "scope": "project", "ttlMin": 180, "label": "Cook / Packaged", "icon": "cook" },
     { "id": "smoke", "scope": "project", "ttlMin": 90,  "label": "Smoke tests",     "icon": "smoke" },
-    { "id": "editor","scope": "project", "ttlMin": 30,  "label": "Editor restart",  "icon": "editor" }
+    { "id": "editor","scope": "project", "ttlMin": 30,  "label": "Editor",          "icon": "editor" },
+    { "id": "blender","scope": "project", "ttlMin": 30, "label": "Blender (live)",  "icon": "blender" }
   ],
   "gates": [
-    { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait" },
+    { "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait",
+      "calls": { "tools": ["reload_project_toolsets", { "tool": "pie_start_smoke", "until": "pie_collect_smoke" }, "pie_collect_smoke"] } },
+    { "tools": "^mcp__blender__", "resource": "blender", "mode": "wait" },
     { "commands": "\\\\Packaged\\\\|remote_run\\.ps1|run_smoke", "resource": "@node:laptop" }
   ]
 }
 ```
+
+The editor gate takes the Unreal profile's app-wide `calls` (level load, save all, PIE) plus the project's own
+editor-wide tools; see [PROFILES.md](PROFILES.md#app-wide-calls). The Blender gate shares one live Blender between chats.

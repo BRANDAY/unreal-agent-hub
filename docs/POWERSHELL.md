@@ -74,6 +74,18 @@ Invoke-HubLocked cpp, cook { & .\Tools\package.ps1 } -TtlMin 180   # always cpp 
 
 The same by hand: `$cpp = Enter-HubLock cpp -TtlMin 180; $cook = Enter-HubLock cook; try { ... } finally { Exit-HubLock $cook; Exit-HubLock $cpp }`.
 
+### `Set-HubStamp <Name> [-Files <pattern[]>] [-Note]` and `Assert-HubOwn <Name> [-Require]`
+
+`hub stamp` and `hub whose` ([CLI.md](CLI.md#hub-stamp-and-hub-whose)): the build script stamps what it made, the test
+script says whose build it runs, and a required check refuses another chat's build.
+
+```powershell
+# build.ps1, after a successful build
+Set-HubStamp build -Files 'Binaries/Win64/UnrealEditor-MyGame*.dll' -Note "$Target $Config"
+# run_smoke.ps1, before the run
+Assert-HubOwn build -Require:$RequireOwnBuild   # one "[hub] ... not yours" line, or a throw with -Require
+```
+
 ## Nesting
 
 When `Enter-HubLock` succeeds it sets the process environment variable `UAH_TOKEN_<KEY>` (key upper-cased, every character outside `A-Z0-9` turned into `_`; `cpp` gives `UAH_TOKEN_CPP`, `MyGame~cook` gives `UAH_TOKEN_MYGAME_COOK`). Child processes inherit it. A script started from inside the lock that calls `Enter-HubLock` for the same resource finds its own token, gets a re-entrant handle and passes straight through instead of waiting for its parent. `Exit-HubLock` on that inner handle does nothing, and the outer script frees the lock. The same variable is set by `hub lock`, so shell and PowerShell nesting mix freely.

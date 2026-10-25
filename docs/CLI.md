@@ -19,6 +19,8 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `hub claims [--json]` | Files claimed by chats through the file gate, held or over ([FILES.md](FILES.md)) |
 | `hub claims release <path>` | Free one claim by hand; ask its holder first |
 | `hub watch [status\|down\|up] [--note T]` | The project app (editor): its state; `down` = closed by a chat, it comes back; `up` = it is back ([WATCH.md](WATCH.md)) |
+| `hub stamp <name> [--files a,b] [--note T]` | Record who made `<name>` (a build): this chat, the time, the commit and the files' time and size (below) |
+| `hub whose <name> [--require] [--json]` | Is `<name>` this chat's own? One line; `--require` exits `3` when it is not |
 | `hub grant [<res or machine>] [--token T]` | Answer a handover request: yes, take it |
 | `hub decline [<res or machine>] [--token T]` | Answer a handover request: not now |
 | `hub serve [--port N] [--no-tunnels]` | Run the board ([BOARD.md](BOARD.md)) |
@@ -129,12 +131,36 @@ hub install-hooks --agent cursor --uninstall
 
 Prints `ok`, `warn` or `info` lines: Node.js version, machine config, state folder, role and id, whether the board port answers, each node's token, the ssh client, the shim `~/.unreal-agent-hub/bin/hub.cjs`, and where each agent's hooks are installed.
 
+## `hub stamp` and `hub whose`
+
+A lock says who goes now, not what the previous holder left behind. A chat that runs its required checks right after
+another chat's experimental build tests that build, and learns it only from the results. So the step that makes
+something others will use stamps it, and the step that uses it asks whose it is:
+
+```bash
+# end of the build script, after a successful build
+hub stamp build --files "Binaries/Win64/UnrealEditor-MyGame*.dll" --note "Development"
+# start of a smoke test
+hub whose build              # "build" is from chat A, 14:02, not yours · commit 1a2b3c4 · 3 uncommitted files
+hub whose build --require    # the same text on stderr and exit code 3: for required checks
+```
+
+- A stamp lives in `state/stamps/<project>~<name>.json` inside a project with an overlay (else `<name>.json`): chat,
+  session, machine, time, `git` commit and the number of uncommitted files, and the time and size of every file of
+  `--files`. A wildcard is allowed in the file name only (`Binaries/Win64/UnrealEditor-*.dll`).
+- "Mine" means the same agent session (`CLAUDE_CODE_SESSION_ID` / `UAH_SESSION`). Files that changed since the stamp
+  make it "unknown": they were made outside the stamping step.
+- The `calls` of a gate stamp what they open (`load_level` stamps `level` with the level path) and tell the model
+  before an app-wide call when a stamp in `notes` is another chat's ([PROFILES.md](PROFILES.md#app-wide-calls)).
+- PowerShell: `Set-HubStamp` and `Assert-HubOwn` ([POWERSHELL.md](POWERSHELL.md)).
+
 ## Exit codes
 
 | Code | When |
 |---|---|
 | `0` | Success. Also `hub hook` always, and `hub serve` when the port is already taken (the board is already running) |
 | `1` | Usage errors, refused actions (`hub release` of someone else's lock without `--force`, `hub break` of a live lock without `--force`), `hub grant`/`decline` with no matching request, a `hub lock` child killed by a signal |
+| `3` | `hub whose --require`: the stamp is another chat's, unknown or missing |
 | `75` | The resource could not be taken: busy with `--no-wait`, wait timed out, aborted, or an unknown resource name. Used by `lock`, `take` and `hold` |
 | `127` | `hub lock` could not start the command (spawn error). On Windows the command runs through `cmd.exe`, so a missing program is reported by `cmd.exe` with its own code (not verified here) |
 | other | `hub lock` returns the child's exit code unchanged |

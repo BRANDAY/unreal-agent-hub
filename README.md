@@ -47,6 +47,10 @@ shows the queue.
 - **Editor restarts that don't break the other chats.** While one chat restarts the editor (its MCP server), the
   other chats' MCP calls wait instead of hitting a dead port; an editor a chat closed or that crashed is opened again
   by the board, never during a build and never after a person closed it ([WATCH](docs/WATCH.md)).
+- **App-wide editor calls in turn.** A level load, save-all or Play-In-Editor from one chat holds the editor for that
+  call, so it never lands in the middle of another chat's work ([PROFILES](docs/PROFILES.md#app-wide-calls)).
+- **Whose build is this?** Build scripts stamp what they made (`hub stamp build`); a smoke test hears "not yours",
+  and a required check refuses another chat's build (`hub whose build --require`, [CLI](docs/CLI.md#hub-stamp-and-hub-whose)).
 - **One protocol, any language.** Plain JSON files in `~/.unreal-agent-hub/state`, atomic create and
   rename-aside break, no mutex ([PROTOCOL](docs/PROTOCOL.md)). Node CLI, PowerShell module, MCP tools - all equal.
 - **Priorities without preemption.** A person at the machine > a chat on that machine > a chat's hold > scripts;

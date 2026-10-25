@@ -214,6 +214,8 @@
   "cli.help.here": "« Je suis devant cette machine » (présence)",
   "cli.help.claims": "fichiers revendiqués par des chats (barrière de fichiers) ; release en libère un à la main",
   "cli.help.watch": "l'application du projet (éditeur) : état ; down = fermée par un chat, elle revient",
+  "cli.help.stamp": "noter qui a produit <name> (un build) : chat, heure, commit, fichiers",
+  "cli.help.whose": "<name> vient-il de ce chat ? --require : code de sortie 3 sinon",
   "cli.help.grant": "répondre à une demande de passation : « Oui, vas-y »",
   "cli.help.decline": "répondre à une demande de passation : « Pas maintenant »",
   "cli.help.serve": "lancer le tableau (http://127.0.0.1:8790)",
@@ -329,6 +331,7 @@
   "hook.appDown": "{project} : l'application est arrêtée et un redémarrage est en cours ({reason}) ; attendu {min} min. Fais autre chose et réessaie plus tard ; `hub watch` montre son état. N'arrête jamais des processus que tu n'as pas lancés.",
   "hook.busyWord": "occupé",
   "hook.busy": "La ressource « {key} » est occupée : {holder}. Attendu {min} min. {retry}",
+  "hook.callNote": "Unreal Agent Hub, avant cet appel : {text}.",
   "hook.project": "projet",
   "hook.hubLine": "Unreal Agent Hub : cette machine ({label}) est le hub ; tableau http://127.0.0.1:{port}. Le travail lourd de ce chat {project} attend tout seul les ressources partagées (un hook). Pour tenir une ressource sur plusieurs étapes : `hub hold <resource>`, et la libérer avec `hub release <resource>` (ou les outils hub_hold / hub_release) ; `hub status` montre la file. Ne casse jamais le verrou de quelqu'un d'autre et ne l'attends pas en arrêtant ses processus.",
   "hook.held": "En ce moment « {key} » est tenu par {holder} ; le travail qui en a besoin attendra.",
@@ -406,5 +409,13 @@
   "ask.hideTip": "Masquer cette demande sur cette page. L'exécution continue d'attendre ; la carte revient si elle redemande.",
   "ask.offline": "Pas de connexion au hub : la réponse ne lui parviendrait pas",
   "ask.showHidden": "Afficher les demandes masquées ({n})",
-  "live.stale": "Pas de connexion au hub depuis {time} : la page montre ce qu'elle savait alors. Elle se reconnecte toute seule."
+  "live.stale": "Pas de connexion au hub depuis {time} : la page montre ce qu'elle savait alors. Elle se reconnecte toute seule.",
+  "cli.stamped": "\"{name}\" noté : {n} fichiers, commit {commit}",
+  "cli.whoseRequire": "{text}. Le produire d'abord dans ce chat (--require).",
+  "stamp.none": "personne n'a noté \"{name}\" : on ne sait pas de qui il vient",
+  "stamp.changed": "\"{name}\" a changé après que {chat} l'a noté à {at} : produit hors de l'étape qui le note, origine inconnue",
+  "stamp.mine": "\"{name}\" vient de ce chat ({at})",
+  "stamp.other": "\"{name}\" vient de {chat}, {at}, pas de vous",
+  "stamp.commit": "commit {commit}",
+  "stamp.dirty": "{n} fichiers non commités"
 }

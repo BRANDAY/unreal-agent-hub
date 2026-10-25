@@ -58,7 +58,8 @@ test('install-hooks: Claude, Codex and Cursor files; re-run replaces, uninstall 
   assert.equal(s.hooks.PreToolUse[1].hooks[0].timeout, 1800);
   assert.match(s.hooks.SessionStart[0].hooks[0].command, /hook --agent claude$/);
   assert.ok(s.hooks.Notification);
-  assert.equal(s.hooks.PostToolUse[0].matcher, 'mcp__.*__start_session', 'PostToolUse only for start_session (cloud sessions)');
+  assert.equal(s.hooks.PostToolUse[0].matcher, 'mcp__.*', 'PostToolUse for MCP calls: call holds and cloud sessions');
+  assert.equal(s.hooks.PostToolUseFailure[0].matcher, 'mcp__.*', 'a failed app-wide call frees its call hold too');
   I.run({ agent: 'claude', file: claude, cfg, uninstall: true });
   s = JSON.parse(fs.readFileSync(claude, 'utf8'));
   assert.deepEqual(Object.keys(s.hooks), ['PreToolUse']);

@@ -214,6 +214,8 @@
   "cli.help.here": "«Sono seduto a questa macchina» (presenza)",
   "cli.help.claims": "file rivendicati dalle chat (barriera sui file); release ne libera uno a mano",
   "cli.help.watch": "l'app del progetto (editor): stato; down = chiusa da una chat, torna da sola",
+  "cli.help.stamp": "registra chi ha prodotto <name> (una build): chat, ora, commit, file",
+  "cli.help.whose": "<name> è di questa chat? --require: codice di uscita 3 se no",
   "cli.help.grant": "rispondere a una richiesta di passaggio: «Sì, prendila»",
   "cli.help.decline": "rispondere a una richiesta di passaggio: «Non ora»",
   "cli.help.serve": "avviare la bacheca (http://127.0.0.1:8790)",
@@ -329,6 +331,7 @@
   "hook.appDown": "{project}: l'app è ferma e un riavvio è in corso ({reason}); atteso {min} min. Fai altro e riprova più tardi; `hub watch` ne mostra lo stato. Non fermare mai processi che non hai avviato tu.",
   "hook.busyWord": "occupata",
   "hook.busy": "La risorsa «{key}» è occupata: {holder}. Atteso {min} min. {retry}",
+  "hook.callNote": "Unreal Agent Hub, prima di questa chiamata: {text}.",
   "hook.project": "progetto",
   "hook.hubLine": "Unreal Agent Hub: questa macchina ({label}) è l'hub; bacheca http://127.0.0.1:{port}. Il lavoro pesante di questa chat di {project} aspetta da solo le risorse condivise (un hook). Per tenere una risorsa su più passi: `hub hold <resource>`, e liberarla con `hub release <resource>` (o con gli strumenti hub_hold / hub_release); `hub status` mostra la coda. Non rompere mai il lock di un altro e non aspettarlo fermando i suoi processi.",
   "hook.held": "In questo momento «{key}» è tenuta da {holder}; il lavoro che ne ha bisogno aspetterà.",
@@ -406,5 +409,13 @@
   "ask.hideTip": "Nascondi questa richiesta in questa pagina. L'esecuzione continua ad aspettare; la scheda torna se chiede di nuovo.",
   "ask.offline": "Nessuna connessione all'hub: la risposta non gli arriverebbe",
   "ask.showHidden": "Mostra le richieste nascoste ({n})",
-  "live.stale": "Nessuna connessione all'hub dalle {time}: la pagina mostra ciò che sapeva allora. Si riconnette da sola."
+  "live.stale": "Nessuna connessione all'hub dalle {time}: la pagina mostra ciò che sapeva allora. Si riconnette da sola.",
+  "cli.stamped": "\"{name}\" registrato: {n} file, commit {commit}",
+  "cli.whoseRequire": "{text}. Producilo prima in questa chat (--require).",
+  "stamp.none": "nessuno ha registrato \"{name}\": non si sa di chi sia",
+  "stamp.changed": "\"{name}\" è cambiato dopo che {chat} l'ha registrato alle {at}: prodotto fuori dal passo che lo registra, origine ignota",
+  "stamp.mine": "\"{name}\" è di questa chat ({at})",
+  "stamp.other": "\"{name}\" è di {chat}, {at}, non tuo",
+  "stamp.commit": "commit {commit}",
+  "stamp.dirty": "{n} file non committati"
 }

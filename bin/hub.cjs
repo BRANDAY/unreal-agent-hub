@@ -18,6 +18,8 @@ const HELP_CMDS = [
   ['here [<machine>] [--off] [--ttl N]', 'here'],
   ['claims [--json] | claims release <path>', 'claims'],
   ['watch [status|down|up] [--note TEXT]', 'watch'],
+  ['stamp <name> [--files a,b] [--note TEXT]', 'stamp', 2],
+  ['whose <name> [--require] [--json]', 'whose'],
   ['grant [<res|machine>] [--token T]', 'grant'],
   ['decline [<res|machine>] [--token T]', 'decline'],
   ['serve [--port N] [--no-tunnels]', 'serve'],
@@ -57,7 +59,7 @@ function parse(argv) {
       const k = a.slice(2);
       if (k.startsWith('no-')) { out[k] = true; continue; }
       const nxt = argv[i + 1];
-      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
+      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
     } else out._.push(a);
   }
   return out;
@@ -193,6 +195,24 @@ async function main() {
       return print(T('cli.watchState', { project: w.project, port: w.port,
         state: alive ? T('cli.watchAnswers') : why ? T('cli.watchDeadRestart', { why }) : T('cli.watchDeadIdle'),
         dog: w.start ? T('cli.watchdogOn', { cmd: [].concat(w.start).join(' ') }) : T('cli.watchdogOff') }));
+    }
+    case 'stamp': {
+      const name = a._[0];
+      if (!name) die(T('cli.usage', { syntax: 'hub stamp <name> [--files <pattern,pattern>] [--note text]' }));
+      const files = typeof a.files === 'string' ? a.files.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const rec = require('../lib/stamps.cjs').write(cfg, name, client.identity(cfg, { chat: a.chat }),
+        { files, note: typeof a.note === 'string' ? a.note : '', cwd: process.cwd() });
+      return print(T('cli.stamped', { name: rec.name, n: rec.files.length, commit: rec.commit || '-' }));
+    }
+    case 'whose': {
+      const name = a._[0];
+      if (!name) die(T('cli.usage', { syntax: 'hub whose <name> [--require] [--json]' }));
+      const c = require('../lib/stamps.cjs').check(cfg, name, client.identity(cfg, { chat: a.chat }));
+      const { say } = require('../lib/i18n.cjs');
+      if (a.json) print(JSON.stringify({ known: c.known, mine: c.mine, changed: c.changed, text: say(c.m), stamp: c.rec }, null, 2));
+      else if (!c.mine && a.require) die(T('cli.whoseRequire', { text: say(c.m) }), 3);
+      else print(say(c.m));
+      return process.exit(c.mine || !a.require ? 0 : 3);
     }
     case 'break': {
       const res = a._[0];

@@ -1,10 +1,11 @@
 {
-  "description": "Unreal Agent Hub: chat status for the board; heavy work waits for its shared resource; a shared file belongs to one chat at a time; background work and cloud sessions show on the board. Chats outside an Unreal (or configured) project exit at once.",
+  "description": "Unreal Agent Hub: chat status for the board; heavy work waits for its shared resource; an app-wide editor call (level load, save all, PIE) holds the editor for the call; a shared file belongs to one chat at a time; background work and cloud sessions show on the board. Chats outside an Unreal (or configured) project exit at once.",
   "hooks": {
     "SessionStart": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
     "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
     "PreToolUse": [{ "matcher": "Bash|PowerShell|Edit|Write|MultiEdit|NotebookEdit|mcp__.*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 1800, "statusMessage": "Unreal Agent Hub: waiting for a shared resource" }] }],
-    "PostToolUse": [{ "matcher": "mcp__.*__start_session", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10, "async": true }] }],
+    "PostToolUse": [{ "matcher": "mcp__.*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
+    "PostToolUseFailure": [{ "matcher": "mcp__.*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }],
     "Notification": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10, "async": true }] }],
     "Stop": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10, "async": true }] }],
     "SessionEnd": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/hub.cjs\" hook", "timeout": 10 }] }]

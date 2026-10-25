@@ -69,12 +69,41 @@ A gate rule says: when a tool call matches, wait for this resource.
 | `resource` | A resource name ([CONFIG.md](CONFIG.md#resource-names)); unresolved names are skipped |
 | `mode` | `wait` or `hold`. Default: `hold` when the resource starts with `@` or `role:`, otherwise `wait` |
 | `ttlMin` | Lifetime of a hold taken by this gate (`hold` mode only) |
+| `calls` | `wait` mode only: app-wide calls that take the resource for the call (below). `true` = the profile's `calls`; an object adds its `tools` to the profile's and overrides the other fields (`"inherit": false` drops the profile's) |
 
 - `wait`: the call waits, taking nothing, until the resource is free of other holders. The holder's own calls pass. Example: MCP calls to the Unreal editor wait while another chat restarts it.
 - `hold`: the call takes the resource as a hold for this chat and keeps it until the chat's next `Stop` or `SessionEnd`, or its TTL. Example: a build command holds the machine.
 - After `gateWaitSec` (default 1500) the call is denied with the holder's name and "Do other work and try again later". Any internal error lets the call through: the hub never blocks a chat for its own faults.
 - Project gates (from the overlay) are added after the profile's gates; all matching gates are applied in order.
 - On a node only gates for `@machine` or `@node:<this node>` are enforced, and they wait through the hub. Other gates are ignored there.
+
+### App-wide calls
+
+A `wait` gate makes calls wait only while someone holds the resource. Two chats' ordinary calls still go into one
+editor in turn, and one chat's level load lands in the middle of another chat's work. The calls listed in `calls`
+change the whole app (load a level, save everything, Play-In-Editor), so a chat that does not hold the resource takes
+it for the call: a **call hold** (`mode: hold`, `by: hook-call`, shown on the board like any hold). Other chats' calls
+wait behind it; the PostToolUse (or PostToolUseFailure) of the call frees it.
+
+```json
+{ "tools": "^mcp__unreal-mcp__", "resource": "editor", "mode": "wait", "calls": true }
+```
+
+| Field of `calls` | Meaning |
+|---|---|
+| `tools[]` | The tool name (for an MCP proxy such as `call_tool`, the `tool_name` inside its input, without the toolset), or an object: `tool`, `until` (keep the hold until that tool has run: `StartPIE` until `StopPIE`), `emptyArg` (app-wide only when that argument is empty: `save_assets` with no list saves everything), `stamp` + `arg` (record what the call opened: `load_level` stamps `level` with `level_path`) |
+| `script` | `{tool, arg}`: a tool that runs a script of other tools (`execute_tool_script`); the script text is searched for the names in `tools` |
+| `ttlMin` | Lifetime of a call hold (default 5) |
+| `spanTtlMin` | Lifetime of a hold with `until` (default 15) |
+| `notes[]` | Stamps ([CLI.md](CLI.md#hub-stamp-and-hub-whose)) the model hears about, once, before an app-wide call when they are another chat's: `build`, `level` |
+
+- Several app-wide calls of one chat are counted into one hold; the last one frees it. A chat's own hold (`hub hold`)
+  lets its calls through and is never dropped by them. `Stop` and `SessionEnd` free a call hold that was left over.
+- A call hold is not "a restart under way" for the app watch ([WATCH.md](WATCH.md)).
+- The note before a call is Claude Code only (PreToolUse `additionalContext`); Codex and Cursor get the hold, not the
+  note. Call holds need the PostToolUse / PostToolUseFailure hooks, which only Claude Code has: on the other agents a
+  call hold lasts until the chat's `Stop` or its TTL.
+- A sequence of app-wide steps (load a level, change it, save it) still needs `hub hold editor` around it.
 
 ## The probe
 
@@ -142,13 +171,33 @@ The cached copy adds `fetched`, `by`, `online`, `error` and `lastBusyAt` (when p
     { "tools": "^mcp__unreal-mcp__", "resource": "@machine" },
     { "commands": "UnrealEditor|UnrealBuildTool|RunUAT|Build\\.(bat|sh)|-(Win64|Linux|Mac)-(Shipping|Test|Development|DebugGame)", "resource": "@machine" }
   ],
+  "calls": {
+    "tools": [ { "tool": "load_level", "stamp": "level", "arg": "level_path" }, { "tool": "save_assets", "emptyArg": "asset_paths" },
+      { "tool": "StartPIE", "until": "StopPIE" }, "StopPIE", "edit_level_instance", "commit_level_instance" ],
+    "script": { "tool": "execute_tool_script", "arg": "script" },
+    "ttlMin": 5, "spanTtlMin": 15, "notes": ["build", "level"]
+  },
   "holdTtlMin": 60,
   "labels": { "en": { "busy": "Unreal is running" }, "de": { "busy": "Unreal läuft" }, "fr": { "busy": "Unreal est ouvert" },
               "it": { "busy": "Unreal è aperto" }, "es": { "busy": "Unreal está abierto" }, "ru": { "busy": "открыт Unreal" } }
 }
 ```
 
-Both gates use `@machine`, so on a hub they only do something when `machineResource` is set ([CONFIG.md](CONFIG.md)), and on a node they hold the node's machine resource through the hub.
+Both gates use `@machine`, so on a hub they only do something when `machineResource` is set ([CONFIG.md](CONFIG.md)), and on a node they hold the node's machine resource through the hub. The profile's `calls` take effect through a project gate with `"calls": true` on the editor resource (the example overlay in [CONFIG.md](CONFIG.md)).
+
+### A live Blender next to the editor
+
+An Unreal project that also drives a running Blender through its MCP server (`127.0.0.1:9876`) shares that one Blender
+between chats. Make it a project resource and gate its tools in `wait` mode; a chat that works in Blender for a while
+holds it (`hub hold blender` ... `hub release blender`):
+
+```json
+"resources": [ { "id": "blender", "scope": "project", "ttlMin": 30, "label": "Blender (live)" } ],
+"gates": [ { "tools": "^mcp__blender__", "resource": "blender", "mode": "wait" } ]
+```
+
+Headless Blender runs (`blender -b ... --python`) are separate processes that do not touch the live one: leave them out
+of this gate.
 
 ## Examples (not active unless named)
 

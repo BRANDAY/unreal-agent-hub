@@ -214,6 +214,8 @@
   "cli.help.here": "„Ich sitze an diesem Rechner“ (Anwesenheit)",
   "cli.help.claims": "von Chats beanspruchte Dateien (Dateischranke); release gibt eine von Hand frei",
   "cli.help.watch": "die Projekt-App (Editor): Zustand; down = von einem Chat geschlossen, kommt zurück",
+  "cli.help.stamp": "festhalten, wer <name> erstellt hat (einen Build): Chat, Zeit, Commit, Dateien",
+  "cli.help.whose": "stammt <name> von diesem Chat? --require: Exit-Code 3, wenn nicht",
   "cli.help.grant": "eine Übergabeanfrage beantworten: „Ja, gern“",
   "cli.help.decline": "eine Übergabeanfrage beantworten: „Jetzt nicht“",
   "cli.help.serve": "das Board starten (http://127.0.0.1:8790)",
@@ -329,6 +331,7 @@
   "hook.appDown": "{project}: die App ist aus und ein Neustart läuft ({reason}); {min} Min. gewartet. Mach anderes und versuche es später noch einmal; `hub watch` zeigt ihren Zustand. Stoppe nie Prozesse, die du nicht selbst gestartet hast.",
   "hook.busyWord": "belegt",
   "hook.busy": "Ressource „{key}“ ist belegt: {holder}. {min} Min. gewartet. {retry}",
+  "hook.callNote": "Unreal Agent Hub, vor diesem Aufruf: {text}.",
   "hook.project": "Projekt",
   "hook.hubLine": "Unreal Agent Hub: dieser Rechner ({label}) ist der Hub; Board http://127.0.0.1:{port}. Schwere Arbeit dieses {project}-Chats wartet von selbst auf gemeinsame Ressourcen (ein Hook). Eine Ressource über mehrere Schritte halten: `hub hold <resource>`, freigeben mit `hub release <resource>` (oder den Tools hub_hold / hub_release); `hub status` zeigt die Warteschlange. Fremde Locks nie aufbrechen oder aussitzen, indem du ihre Prozesse stoppst.",
   "hook.held": "Gerade wird „{key}“ von {holder} gehalten; Arbeit, die es braucht, wartet.",
@@ -406,5 +409,13 @@
   "ask.hideTip": "Diese Anfrage auf dieser Seite ausblenden. Der Lauf wartet weiter; die Karte kommt wieder, wenn er erneut fragt.",
   "ask.offline": "Keine Verbindung zum Hub: die Antwort käme dort nicht an",
   "ask.showHidden": "Ausgeblendete Anfragen anzeigen ({n})",
-  "live.stale": "Keine Verbindung zum Hub seit {time}: die Seite zeigt, was sie damals wusste. Sie verbindet sich von selbst neu."
+  "live.stale": "Keine Verbindung zum Hub seit {time}: die Seite zeigt, was sie damals wusste. Sie verbindet sich von selbst neu.",
+  "cli.stamped": "\"{name}\" festgehalten: {n} Dateien, Commit {commit}",
+  "cli.whoseRequire": "{text}. Zuerst in diesem Chat erstellen (--require).",
+  "stamp.none": "niemand hat \"{name}\" festgehalten: von wem es stammt, ist unbekannt",
+  "stamp.changed": "\"{name}\" hat sich geändert, nachdem {chat} es um {at} festgehalten hat: außerhalb des Schritts erstellt, Herkunft unbekannt",
+  "stamp.mine": "\"{name}\" stammt von diesem Chat ({at})",
+  "stamp.other": "\"{name}\" stammt von {chat}, {at}, nicht von Ihnen",
+  "stamp.commit": "Commit {commit}",
+  "stamp.dirty": "{n} nicht committete Dateien"
 }

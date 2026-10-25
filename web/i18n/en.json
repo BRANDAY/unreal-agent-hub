@@ -214,6 +214,8 @@
   "cli.help.here": "\"I am sitting at this machine\" (presence)",
   "cli.help.claims": "files claimed by chats (file gate); release frees one by hand",
   "cli.help.watch": "the project app (editor): state; down = closed by a chat, comes back",
+  "cli.help.stamp": "record who made <name> (a build): chat, time, commit, files",
+  "cli.help.whose": "is <name> this chat's? --require: exit 3 when it is not",
   "cli.help.grant": "answer a handover request: \"yes, take it\"",
   "cli.help.decline": "answer a handover request: \"not now\"",
   "cli.help.serve": "run the board (http://127.0.0.1:8790)",
@@ -329,6 +331,7 @@
   "hook.appDown": "{project}: the app is down and a restart is under way ({reason}); waited {min} min. Do other work and try again later; `hub watch` shows its state. Never stop processes you did not start.",
   "hook.busyWord": "busy",
   "hook.busy": "Resource \"{key}\" is busy: {holder}. Waited {min} min. {retry}",
+  "hook.callNote": "Unreal Agent Hub, before this call: {text}.",
   "hook.project": "project",
   "hook.hubLine": "Unreal Agent Hub: this machine ({label}) is the hub; board http://127.0.0.1:{port}. Heavy work of this {project} chat waits for shared resources by itself (a hook). Hold a resource across several steps with `hub hold <resource>` and free it with `hub release <resource>` (or the hub_hold / hub_release tools); `hub status` shows the queue. Never break or wait out someone else's lock by stopping their processes.",
   "hook.held": "Right now \"{key}\" is held by {holder}; work that needs it will wait.",
@@ -406,5 +409,13 @@
   "ask.hideTip": "Hide this request on this page. The run keeps waiting; the card comes back if it asks again.",
   "ask.offline": "No connection to the hub: the answer would not reach it",
   "ask.showHidden": "Show hidden requests ({n})",
-  "live.stale": "No connection to the hub since {time}: the page shows what it knew then. It reconnects by itself."
+  "live.stale": "No connection to the hub since {time}: the page shows what it knew then. It reconnects by itself.",
+  "cli.stamped": "stamped \"{name}\": {n} files, commit {commit}",
+  "cli.whoseRequire": "{text}. Make it in this chat first (--require).",
+  "stamp.none": "nobody has stamped \"{name}\": whose it is is unknown",
+  "stamp.changed": "\"{name}\" changed after {chat} stamped it at {at}: made outside the stamping step, whose it is is unknown",
+  "stamp.mine": "\"{name}\" is this chat's own ({at})",
+  "stamp.other": "\"{name}\" is from {chat}, {at}, not yours",
+  "stamp.commit": "commit {commit}",
+  "stamp.dirty": "{n} uncommitted files"
 }
