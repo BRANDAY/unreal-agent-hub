@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 - 2026-10-25
+
+- **PowerShell module: chat names in any alphabet.** `Invoke-HubCli` read Node's UTF-8 output in the console's
+  code page (OEM 866 in a Russian Windows PowerShell 5.1), so `Get-HubStatus`, `Enter-HubLock` errors and the rest
+  showed Cyrillic holders as mojibake. The module now reads that output as UTF-8 and restores the console encoding
+  after the call.
+
 ## 0.6.0 - 2026-10-25
 
 Locks also cover what the previous holder left behind, and the editor's app-wide calls go in turn.

@@ -18,9 +18,14 @@ function Get-HubCli {
 
 function Invoke-HubCli([string[]]$Arguments) {
     $cli = Get-HubCli
-    # stderr (the "waiting for ..." lines) goes straight to the console; stdout is the answer.
-    $out = & node $cli @Arguments
-    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($out -join "`n") }
+    # stderr (the "waiting for ..." lines) goes straight to the console; stdout is the answer. Node writes it in
+    # UTF-8, and PowerShell 5.1 reads it in the console's code page, so chat names in other alphabets come out
+    # garbled unless the reader is switched to UTF-8 for the call.
+    $enc = [Console]::OutputEncoding
+    try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch {}
+    try { $out = & node $cli @Arguments; $code = $LASTEXITCODE }
+    finally { try { [Console]::OutputEncoding = $enc } catch {} }
+    return [pscustomobject]@{ ExitCode = $code; Output = ($out -join "`n") }
 }
 
 function Get-HubTokenVariable([string]$Key) {
