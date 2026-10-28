@@ -46,7 +46,9 @@ shows the queue.
   Edits of what the build compiles wait while another chat builds or packages ([FILES](docs/FILES.md)).
 - **Editor restarts that don't break the other chats.** While one chat restarts the editor (its MCP server), the
   other chats' MCP calls wait instead of hitting a dead port; an editor a chat closed or that crashed is opened again
-  by the board, never during a build and never after a person closed it ([WATCH](docs/WATCH.md)).
+  by the board, never during a build and never after a person closed it ([WATCH](docs/WATCH.md)). With
+  `hub mcp-proxy install --agent claude` each chat reaches the editor through a small watchdog proxy: `unreal-mcp`
+  stays connected while the editor is down, calls wait for it and pass, no Reconnect needed ([MCP-PROXY](docs/MCP-PROXY.md)).
 - **App-wide editor calls in turn.** A level load, save-all or Play-In-Editor from one chat holds the editor for that
   call, so it never lands in the middle of another chat's work ([PROFILES](docs/PROFILES.md#app-wide-calls)).
 - **Whose build is this?** Build scripts stamp what they made (`hub stamp build`); a smoke test hears "not yours",

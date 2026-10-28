@@ -93,8 +93,9 @@ hub watch up
 
 ## Limits
 
-- The agent's own MCP client may give up on a server that was gone for a while: after a restart longer than its
-  retry window, the chat has to reconnect (`/mcp` in Claude Code). The hub keeps calls from failing during the
-  restart; it cannot reconnect a chat's MCP client for it.
+- The agent's own MCP client gives up on a server that was gone for a while: after a restart longer than its retry
+  window (about 31 s in Claude Code), a chat that talks to the editor directly has to reconnect (`/mcp`). Put the
+  hub's MCP proxy in between (`hub mcp-proxy install --agent claude`, [MCP-PROXY.md](MCP-PROXY.md)): the chat stays
+  connected, calls wait in the proxy and pass when the editor is back. A proxied call is not held by this gate as well.
 - The watchdog runs on the board's machine (the hub), for projects on that machine.
 - It never stops a process. A hung editor (process alive, port dead) is left for a person.

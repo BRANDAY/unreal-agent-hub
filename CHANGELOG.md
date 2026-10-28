@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.8.0 - 2026-10-29
+
+The editor restarts, the chats keep `unreal-mcp`: a watchdog proxy between the agent and the editor's MCP server.
+
+- **`hub mcp-proxy`** ([MCP-PROXY.md](docs/MCP-PROXY.md)). Claude Code gives up on a dead HTTP MCP server after
+  about 31 s and never dials again, and a restarted editor has forgotten every session (`404`); until now each chat
+  needed a manual Reconnect. The proxy answers `initialize`, `ping` and every `*/list` from a cache while the editor
+  is down, holds other calls up to `waitSec` (900 s) with a progress heartbeat, reopens the client's editor session
+  after a restart and repeats only what the editor never executed. A timeout is a tool error that says why the editor
+  is down (the watch's marker, a busy build, the watchdog starting it). Nothing in it names a tool or a toolset: method
+  families, protocol versions and sessions come from the editor's own answers; `--probe` checks an editor after an
+  engine update. Ported from the proxy proven in a production project (33 checks, the official MCP SDK against a live
+  UE 5.8 editor, Claude Code 2.1.227 connected with the editor closed).
+- **One proxy per chat over stdio** is the main mode (no daemon that must start before the chat, no shared point of
+  failure); HTTP on `--port` (default 8001) with `GET /status` is the option, `mcpProxy.daemon` starts it from the
+  hooks like the board.
+- **`hub mcp-proxy install --agent claude|codex|cursor [--uninstall] [--dry-run] [--file F]`** points the `unreal-mcp`
+  entry at the proxy (the name stays, so gates and permissions do not change; the old URL becomes `--upstream`;
+  Claude Code `timeout` 30 min, Codex `tool_timeout_sec`), with a backup and the previous entry kept for `--uninstall`.
+- **Settings**: `mcpProxy` in the unreal profile (`upstream`, `waitSec`, `port`), the machine config and the project
+  overlay; flags and `UAH_MCP_PROXY_*` win. `--down-mark` (a file `{at, by}`, `at` in ms or ISO) stays for scripts that
+  do not call `hub watch down`.
+- **Hook**: a call that goes through the chat's own proxy is not held by the restart wait as well (one wait, not two).
+- **Board**: every proxy writes `state/mcp-proxy/<pid>.json`; the project's `editor` card shows whether the editor's
+  MCP answers and how many calls wait for it (`mcpProxy[]` in `/state`).
+- Six languages for the new texts. Tests 72/72 (`test/mcp-proxy.test.cjs` new: the fake editor of UE 5.8 and of a
+  later plugin, HTTP and stdio, the status file, the hook, timeout reasons, install for the three agents, settings).
+
 ## 0.7.0 - 2026-10-25
 
 Runs share a resource side by side, and a resource can be kept for the run itself.

@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Group, Progress, SimpleGrid, Stack, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
 import {
-  IconBox, IconCode, IconCpu, IconDeviceDesktop, IconDeviceLaptop, IconExternalLink, IconFlame, IconHourglass, IconPackage, IconUser,
+  IconBox, IconCode, IconCpu, IconDeviceDesktop, IconDeviceLaptop, IconExternalLink, IconFlame, IconHourglass, IconPackage,
+  IconPlugConnected, IconPlugConnectedX, IconUser,
 } from '@tabler/icons-react';
 import { t, tm } from './i18n.js';
 import { ago, chatColor, dur, hm, human, modeText, resColorName, stateText, whoOf } from './util.js';
@@ -105,7 +106,39 @@ function placesUsed(r) {
   return Math.min(used, r.slots);
 }
 
-function ResourceCard({ r, now, history, act, hostOf }) {
+// The editor's MCP behind the hub's mcp-proxy (state.mcpProxy): does the editor answer, how many calls wait for it.
+function ProxyLine({ p }) {
+  const Icon = p.editorUp ? IconPlugConnected : IconPlugConnectedX;
+  const parts = [p.editorUp ? t('proxy.editorUp') : t('proxy.editorDown')];
+  if (p.waiting) parts.push(t('proxy.waiting', { n: p.waiting }));
+  if (p.running) parts.push(t('proxy.running', { n: p.running }));
+  return (
+    <Tooltip label={t('proxy.clients', { n: p.clients, upstream: p.upstream })} withArrow multiline w={280}>
+      <Group gap={4} wrap="nowrap" mt="xs" pt="xs" style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+        <Icon size={14} color={`var(--mantine-color-${p.editorUp ? 'teal' : 'orange'}-6)`} style={{ flex: 'none' }} />
+        <Text size="xs" c={p.editorUp ? 'dimmed' : 'orange'} className="clamp1">{parts.join(' · ')}</Text>
+      </Group>
+    </Tooltip>
+  );
+}
+
+function ProxyCard({ p }) {
+  return (
+    <Card withBorder padding="md" style={tint(p.waiting ? 'orange' : '')}>
+      <Group justify="space-between" mb="xs" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+          <ThemeIcon variant="light" color="indigo" size="md"><IconDeviceDesktop size={16} /></ThemeIcon>
+          <Text fw={600} size="sm" className="clamp1" title={p.upstream}>{t('proxy.title')}</Text>
+        </Group>
+        <Badge color={p.editorUp ? 'teal' : 'orange'} variant="light" size="sm" style={{ flex: 'none' }}>{p.editorUp ? t('proxy.up') : t('proxy.down')}</Badge>
+      </Group>
+      <Text size="xs" c="dimmed" ff="monospace" className="clamp1">{p.upstream}</Text>
+      <ProxyLine p={p} />
+    </Card>
+  );
+}
+
+function ResourceCard({ r, now, history, act, hostOf, proxy }) {
   const l = r.lock;
   const places = r.slots > 1;
   const person = l && !l.stale && l.mode === 'presence';
@@ -169,6 +202,7 @@ function ResourceCard({ r, now, history, act, hostOf }) {
         </Tooltip>
       </Group>
       {body}
+      {proxy ? <ProxyLine p={proxy} /> : null}
       <Queue waiters={r.waiters} now={now} />
     </Card>
   );
@@ -240,20 +274,30 @@ export function NodeCard({ n, r, now, act }) {
 export default function Resources({ state, now, act, hostOf }) {
   const nodeKeys = new Set((state.nodes || []).map(n => n.key));
   const groups = [];
+  const group = name => { let g = groups.find(x => x.name === name); if (!g) { g = { name, list: [], proxies: [] }; groups.push(g); } return g; };
+  // A project's proxy goes on its editor card; a project without one gets a card of its own.
+  const proxies = state.mcpProxy || [];
+  const proxyOf = new Map();
   for (const r of state.resources.filter(x => !nodeKeys.has(x.key))) {
-    const name = r.scope === 'project' ? r.projectLabel || r.project : t('res.machineGroup', { m: state.hub.label });
-    let g = groups.find(x => x.name === name);
-    if (!g) { g = { name, list: [] }; groups.push(g); }
-    g.list.push(r);
+    group(r.scope === 'project' ? r.projectLabel || r.project : t('res.machineGroup', { m: state.hub.label })).list.push(r);
+    const p = r.scope === 'project' && (r.id === 'editor' || r.icon === 'editor') && proxies.find(x => x.project && x.project === r.project);
+    if (p && !proxyOf.has(p)) proxyOf.set(p, r.key);
+  }
+  for (const p of proxies) {
+    if (proxyOf.has(p)) continue;
+    const r = state.resources.find(x => x.project && x.project === p.project);
+    group(r ? r.projectLabel || r.project : p.project || t('res.machineGroup', { m: state.hub.label })).proxies.push(p);
   }
   if (!groups.length) return <Text size="sm" c="dimmed">{t('res.none')}</Text>;
+  const cardProxy = new Map([...proxyOf].map(([p, key]) => [key, p]));
   return (
     <Stack gap="md">
       {groups.map(g => (
         <Stack key={g.name} gap="xs">
-          {groups.length > 1 || g.list[0].scope === 'project' ? <Title order={4} fz="sm" c="dimmed" tt="uppercase" lts={0.5}>{g.name}</Title> : null}
+          {groups.length > 1 || !g.list.length || g.list[0].scope === 'project' ? <Title order={4} fz="sm" c="dimmed" tt="uppercase" lts={0.5}>{g.name}</Title> : null}
           <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4, xl: 5 }} spacing="md">
-            {g.list.map(r => <ResourceCard key={r.key} r={r} now={now} history={state.history && state.history.locks} act={act} hostOf={hostOf} />)}
+            {g.list.map(r => <ResourceCard key={r.key} r={r} now={now} history={state.history && state.history.locks} act={act} hostOf={hostOf} proxy={cardProxy.get(r.key)} />)}
+            {g.proxies.map(p => <ProxyCard key={p.project + p.upstream} p={p} />)}
           </SimpleGrid>
         </Stack>
       ))}

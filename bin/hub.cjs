@@ -27,6 +27,8 @@ const HELP_CMDS = [
   ['dump', 'dump'],
   ['hook [--agent claude|codex|cursor]', 'hook'],
   ['mcp', 'mcp'],
+  ['mcp-proxy [--stdio|--probe] [--upstream URL] [--wait SEC] [--port N]', 'mcpProxy', 2],
+  ['mcp-proxy install --agent A [--uninstall] [--dry-run] [--file F]', null],
   ['install-hooks --agent A [--uninstall] [--dry-run] [--file F]', null],
   ['node add <id> [--ssh alias] [--tunnel-port N] [--label L] [--roles a,b]', null],
   ['node install <id>', 'nodeInstall'],
@@ -59,7 +61,7 @@ function parse(argv) {
       const k = a.slice(2);
       if (k.startsWith('no-')) { out[k] = true; continue; }
       const nxt = argv[i + 1];
-      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require', 'shared'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
+      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require', 'shared', 'stdio', 'probe'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
     } else out._.push(a);
   }
   return out;
@@ -96,6 +98,9 @@ async function main() {
     return process.exit(0);
   }
   if (cmd === 'mcp') { require('../lib/mcp.cjs').serve(); return; }
+  // The proxy's stdout is the MCP channel (--stdio): nothing else may print there. It loads the config itself and
+  // relays with defaults if that fails.
+  if (cmd === 'mcp-proxy' && a._[0] !== 'install') { require('../lib/mcp-proxy.cjs').serve(a); return; }
 
   const cfg = C.load({ cwd: process.cwd() });
   C.rememberProject(cfg);
@@ -275,6 +280,15 @@ async function main() {
       const r = require('../lib/install-hooks.cjs').run({ agent: a.agent, uninstall: !!a.uninstall, dryRun: !!a['dry-run'], file: typeof a.file === 'string' ? a.file : undefined, cfg });
       if (a['dry-run']) print(r.text);
       else print(T(a.uninstall ? 'cli.hooksRemoved' : 'cli.hooksInstalled', { file: r.file, backup: r.backup ? T('cli.hooksBackup', { name: path.basename(r.backup) }) : '' }));
+      for (const n of r.notes || []) print(n);
+      return;
+    }
+    case 'mcp-proxy': {
+      const r = require('../lib/mcp-proxy-install.cjs').run({ agent: a.agent, uninstall: !!a.uninstall, dryRun: !!a['dry-run'],
+        file: typeof a.file === 'string' ? a.file : undefined, cfg, cwd: process.cwd() });
+      if (a['dry-run']) print(r.text);
+      else if (r.changed) print(T(a.uninstall ? 'proxy.removed' : 'proxy.installed', { file: r.file, upstream: r.upstream || '',
+        backup: r.backup ? T('cli.hooksBackup', { name: path.basename(r.backup) }) : '' }));
       for (const n of r.notes || []) print(n);
       return;
     }

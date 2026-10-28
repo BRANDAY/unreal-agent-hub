@@ -1,7 +1,7 @@
 {
   "name": "unreal-agent-hub",
   "displayName": "Unreal Agent Hub",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A queue for shared resources of AI coding agents and scripts on one or many machines: the Unreal editor, C++ builds, cooks, GPU laptops. Advisory locks with priorities, machine roles, presence (\"I am at this machine\"), handover requests and a live board.",
   "author": { "name": "BRANDAY" },
   "homepage": "https://github.com/BRANDAY/unreal-agent-hub",

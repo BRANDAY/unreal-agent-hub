@@ -47,6 +47,7 @@ Profiles are plain JSON, loaded from the package folders `profiles/` and `profil
 | `gates[]` | Gate rules, below |
 | `files` | The file gate: which files wait for the build and which are claimed by one chat ([FILES.md](FILES.md)) |
 | `watch` | The project app (the editor): its port, process, log and clean-exit text, for the restart gate and the watchdog ([WATCH.md](WATCH.md)) |
+| `mcpProxy` | The editor's MCP endpoint and how long a call waits for it, for `hub mcp-proxy` ([MCP-PROXY.md](MCP-PROXY.md)) |
 | `holdTtlMin` | TTL for holds taken by the profile's gates and by node chats; falls back to `holdTtlMin` of the machine config |
 | `labels` | Per-language texts. Data only: the current board does not read them |
 

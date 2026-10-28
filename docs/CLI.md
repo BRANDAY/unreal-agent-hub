@@ -28,6 +28,8 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `hub dump` | Print this machine's chats as JSON |
 | `hub hook [--agent claude\|codex\|cursor]` | Hook entry point; reads the agent's JSON on stdin ([AGENTS.md](AGENTS.md)) |
 | `hub mcp` | MCP server over stdio ([MCP.md](MCP.md)) |
+| `hub mcp-proxy [--stdio\|--probe] [--upstream URL] [--wait SEC] [--port N]` | Watchdog proxy in front of the editor's MCP: `--stdio` per chat, else HTTP; `--probe` checks the editor ([MCP-PROXY.md](MCP-PROXY.md)) |
+| `hub mcp-proxy install --agent A [--uninstall] [--dry-run] [--file F]` | Point the agent's `unreal-mcp` entry at the proxy, or back |
 | `hub install-hooks --agent A [--uninstall] [--dry-run] [--file F]` | Write or remove the hub's hooks in an agent's settings file |
 | `hub node add <id> [...]` | Add a node to the machine config and print the config for the node |
 | `hub node install <id>` | Print the steps to set a node up (nothing is run) |
@@ -129,6 +131,19 @@ hub install-hooks --agent cursor --uninstall
 ```
 
 `--file F` writes to another settings file; `--dry-run` prints the result instead of writing. Exact files and contents: [AGENTS.md](AGENTS.md).
+
+## `hub mcp-proxy`
+
+```bash
+hub mcp-proxy install --agent claude --dry-run
+hub mcp-proxy install --agent codex
+hub mcp-proxy install --agent claude --uninstall
+hub mcp-proxy --probe
+```
+
+`install` switches the `unreal-mcp` entry of the agent's MCP config to `hub mcp-proxy --stdio --upstream <the old URL>`
+(backup beside the file, the previous entry kept for `--uninstall`). `--probe` exits `0` when the editor behaves as the
+proxy assumes, `1` with a `WARN` line, `2` when it does not answer. Modes, settings and files: [MCP-PROXY.md](MCP-PROXY.md).
 
 ## `hub doctor`
 

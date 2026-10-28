@@ -38,6 +38,7 @@ Inspect the result with `hub config` (tokens are shown as `***`). The state fold
 | `aging` | object | `{everyMin:10, step:10}` | Waiting adds `step` points per `everyMin` minutes |
 | `presenceTtlMin` | number | `180` | How long a presence mark lasts |
 | `presence.blocks` | string[] | `["remote"]` | Reserved. The code does not read it; behaviour is fixed (see [ROLES.md](ROLES.md)) |
+| `mcpProxy` | object | the profile's | `hub mcp-proxy` settings for every project of the machine; a project overlay's win ([MCP-PROXY.md](MCP-PROXY.md#settings)) |
 | `handover.ask` | boolean | `true` | A run blocked by a person also asks them |
 | `handover.notify` | string[] | `["board"]` | Sinks: `board`, `remote-control` (see [TRANSPORTS.md](TRANSPORTS.md)) |
 | `handover.askAgain` | boolean | `true` | Ask again after "not now" |
@@ -132,6 +133,7 @@ Profile contents are described in [PROFILES.md](PROFILES.md).
 | `profile` | Force a profile for this project |
 | `watch` | The project app watch on top of the profile's: `start` command, port, log; `false` turns it off ([WATCH.md](WATCH.md)) |
 | `files` | File gate settings on top of the profile's, single keys replaced; `false` turns the gate off ([FILES.md](FILES.md)) |
+| `mcpProxy` | The MCP proxy's settings on top of the profile's and the machine's: `upstream`, `waitSec`, `port`, `daemon` ([MCP-PROXY.md](MCP-PROXY.md#settings)) |
 
 A `labels` key is read into the configuration but nothing uses it yet. The hub remembers every overlay it has seen in `state/projects/<id>.json`, so the board lists a project's resources even before anyone takes one.
 
@@ -166,6 +168,7 @@ Unknown names fail (`hub lock` exits 75). On the hub, resources of the hub itsel
 | `UAH_TOKEN_<KEY>` | lock client | Set by `hub lock` and the PowerShell module so nested calls pass through (`cpp` gives `UAH_TOKEN_CPP`, `MyGame~cook` gives `UAH_TOKEN_MYGAME_COOK`) |
 | `UAH_NODE_PROBE=off` | lock client | Never ask a node whether a person is busy (queue ignores probes) |
 | `UAH_HUB_CJS` | PowerShell module | Full path of `hub.cjs` to use; see [POWERSHELL.md](POWERSHELL.md) |
+| `UAH_MCP_PROXY_UPSTREAM`, `_WAIT_SEC`, `_PORT`, `_HOST`, `_KEEPALIVE_SEC`, `_CACHE`, `_LOG`, `_DOWN_MARK` | `hub mcp-proxy` | Override the proxy's settings; its flags win ([MCP-PROXY.md](MCP-PROXY.md#settings)) |
 
 The Claude Code plugin declares four options (`role`, `node_id`, `hub_url`, `token`); empty values are ignored. The plugin's default for `role` is `hub`, so on a node set the plugin option to `node` explicitly. Whether Claude Code exports unset defaults as `CLAUDE_PLUGIN_OPTION_*` is unverified here.
 

@@ -27,6 +27,7 @@
     "cleanExit": "Log file closed|LogExit: Exiting",
     "busy": ["cpp", "cook", "editor"]
   },
+  "mcpProxy": { "upstream": "http://127.0.0.1:8000/mcp", "waitSec": 900, "port": 8001 },
   "calls": {
     "tools": [
       { "tool": "load_level", "stamp": "level", "arg": "level_path" },
