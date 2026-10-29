@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.9.0 - 2026-10-29
+
+Deadlocks between waiters are found and broken; the probe can ignore look-alike processes. Both come from the home-grown
+lock scripts of the production project that moves to the hub, so it loses nothing on the way.
+
+- **Deadlocks** ([PROTOCOL.md section 7](docs/PROTOCOL.md#7-deadlocks), `lib/deadlock.cjs`). A waiter looks every
+  `deadlock.checkSec` (10 s) for a cycle in the wait-for graph, as PostgreSQL's lock manager does: waiter -> the take in
+  its way -> the waiter that owns it (a token in its `UAH_TOKEN_*`, its own process, its chat's hold). A cycle through
+  the queue order is broken by a shared reader going past the whole take queued ahead (`JUMP`); a cycle of holders by
+  the youngest waiter giving up with the cycle named (`CYCLE`, `DEADLOCK`, error `err.deadlock`). The case behind it:
+  a chat holding one `cook` place, its run waiting for the laptop, another chat's run holding the laptop and waiting
+  for a `cook` place behind a package that needed all of them - 41 minutes of three chats standing still.
+- **`lockOrder`** in the machine config: waiting for a resource while holding a later one is said once (`ORDER`).
+- **Waiter records** carry `holds` and `dl`; clients that leave them out stay in the graph and are never chosen.
+- **`busy.ignoreProcesses`**: globs of processes that match `busy.processes` but are not the workload. The unreal
+  profile skips the Epic Games Launcher overlay (`EOSOverlayRenderer-Win64-Shipping`), which kept a machine "busy" for
+  hours.
+- **`request_editor_quit`** is an app-wide call of the unreal profile (a short hold from a chat that does not hold the
+  editor), like `StartPIE` and `save_assets`.
+- `hub lock|take|hold` print the deadlock notices on stderr. Six languages for the new texts. Tests 79/79
+  (`test/deadlock.test.cjs`, `test/probe.test.cjs` new).
+
 ## 0.8.0 - 2026-10-29
 
 The editor restarts, the chats keep `unreal-mcp`: a watchdog proxy between the agent and the editor's MCP server.

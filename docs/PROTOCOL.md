@@ -19,7 +19,7 @@ scripts outside an agent (a build script, CI) find it too.
 | `<key>.json.aside-<pid>-<rand>` | a lock moved aside while it is checked before removal; lives milliseconds |
 | `<key>.presence.saved.json` | a presence mark put aside by "Yes, take it", restored after the run |
 | `<node>.probe.json` | the last probe of a node |
-| `events.jsonl` | `TAKE WAIT GO FREE BREAK LEAVE ASK GRANT DECLINE CANCEL RETURN CONFLICT`, tied by token |
+| `events.jsonl` | `TAKE WAIT GO FREE BREAK LEAVE ASK GRANT DECLINE CANCEL RETURN CONFLICT JUMP DEADLOCK`, tied by token |
 | `log.txt` | the same events for people |
 | `chats/<session>.json`, `chats.jsonl` | chat status for the board |
 
@@ -135,6 +135,32 @@ race. The record of a place carries `slots`, `shared` and `place`.
   rename-aside a place whose token matches: another holder's place never leaves its name, even for a moment.
 - Reading "the lock" of the resource (gates, `hub status` headline) gives the first live place.
 - `hold: false` on a resource refuses holds (`hub hold`, `hub_hold`): it is taken only by the run that uses it.
+
+## 7. Deadlocks
+
+Waits can close a circle. Seen in practice: a chat held one place of `cook` and its run waited for the laptop; another
+chat's run held the laptop and waited for a `cook` place, queued behind a package that needed every `cook` place -
+the first chat's among them. Nobody moved for 41 minutes. A waiter therefore looks every `deadlock.checkSec` (10 s)
+for a cycle in the wait-for graph, as PostgreSQL's lock manager does:
+
+    waiter -> the take in its way -> the waiter that owns that take -> ... -> the first waiter again
+
+- A waiter **owns** a take when it works under it: the take's token is in the waiter's `holds` (the `UAH_TOKEN_*`
+  values of its process, set by a parent script's take), the take is a script lock of the same process (same machine,
+  `pid` and `pidStart`), or the take is a `hold` / `node-chat` of the same `session`.
+- An edge is **hard** when a holder is in the way and **soft** when only the queue order is (section 3): a shared
+  reader with a free place, queued behind a whole take that waits.
+- A cycle with a soft edge is broken by that reader going first: it stops counting the whole takes queued ahead of it
+  (never the readers). `JUMP` in the log and the journal.
+- A cycle of hard edges is broken by one waiter giving up: the youngest (`since`) of those that run this check
+  (`dl: 1` in the waiter record), once no reader in the cycle can jump or after `jumpWaitSec`; after `anySec` any
+  member does. `CYCLE` (once) and `DEADLOCK` in the log, `DEADLOCK` with the cycle in the journal; the client returns
+  `err.deadlock` naming the cycle. Giving up the wait does not release what that chat holds: the message says so.
+- `lockOrder` in the machine config names the order chains should take resources in (the idea of Linux's lockdep):
+  waiting for one while holding a later one is said once, on the first wait (`ORDER` in the log).
+
+A waiter record carries `holds` (tokens) and `dl` for this. A client in another language that does not run the check
+leaves both out: it is still a node of the graph (by its pid and session), never chosen to give up.
 
 ## Writing a client in another language
 

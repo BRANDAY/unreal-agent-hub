@@ -79,6 +79,7 @@ function acquireOpts(a, extra) {
     shared: !!a.shared,
     onWait: (r, waited) => process.stderr.write(T('cli.waiting', { key: r.key, text: r.text,
       since: waited >= 60e3 ? T('cli.waitingSince', { n: Math.round(waited / 60e3) }) : '' }) + '\n'),
+    onNotice: text => process.stderr.write(`[hub] ${text}\n`),
   }, extra || {});
 }
 

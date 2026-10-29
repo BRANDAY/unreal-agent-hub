@@ -40,6 +40,7 @@ Profiles are plain JSON, loaded from the package folders `profiles/` and `profil
 | `match.markers` | File name globs (`*`, `?`, case-insensitive). The chat takes part when one is found |
 | `match.search` | Where to look: `self` (the chat's folder), `parents` (all ancestors), `children` (direct sub-folders, hidden ones and `node_modules` skipped). Default: all three |
 | `busy.processes` | Process name globs. On Windows `.exe` is optional. A match counts only if a person started it (see below) |
+| `busy.ignoreProcesses` | Globs of processes that match `processes` but are not the workload: the Unreal profile skips the Epic Games Launcher overlay (`EOSOverlayRenderer-*`, named like a shipped game), which otherwise keeps a machine "busy" for hours |
 | `busy.details` | `"unreal-editor"` adds `project` and `since` to each Unreal editor process (from its command line). It is the only detail provider |
 | `busy.gpu` | `"nvidia-smi"` (also the behaviour when the key is missing). `false` or `"none"` turns GPU reading off. Other GPU vendors report `null` |
 | `busy.graceMin` | Minutes the machine stays "busy" after the person closes the profile's processes |
@@ -174,7 +175,7 @@ The cached copy adds `fetched`, `by`, `online`, `error` and `lastBusyAt` (when p
   ],
   "calls": {
     "tools": [ { "tool": "load_level", "stamp": "level", "arg": "level_path" }, { "tool": "save_assets", "emptyArg": "asset_paths" },
-      { "tool": "StartPIE", "until": "StopPIE" }, "StopPIE", "edit_level_instance", "commit_level_instance" ],
+      { "tool": "StartPIE", "until": "StopPIE" }, "StopPIE", "request_editor_quit", "edit_level_instance", "commit_level_instance" ],
     "script": { "tool": "execute_tool_script", "arg": "script" },
     "ttlMin": 5, "spanTtlMin": 15, "notes": ["build", "level"]
   },

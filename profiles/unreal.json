@@ -4,6 +4,7 @@
   "match": { "markers": ["*.uproject"], "search": ["self", "parents", "children"] },
   "busy": {
     "processes": ["UnrealEditor", "UnrealEditor-Cmd", "ShaderCompileWorker", "UnrealBuildTool", "*-Win64-Shipping", "*-Win64-Test", "*-Win64-Development", "*-Win64-DebugGame", "*-Linux-Shipping", "*-Mac-Shipping"],
+    "ignoreProcesses": ["EOSOverlayRenderer-*"],
     "details": "unreal-editor",
     "gpu": "nvidia-smi",
     "graceMin": 3,
@@ -34,6 +35,7 @@
       { "tool": "save_assets", "emptyArg": "asset_paths" },
       { "tool": "StartPIE", "until": "StopPIE" },
       "StopPIE",
+      "request_editor_quit",
       "edit_level_instance",
       "commit_level_instance"
     ],

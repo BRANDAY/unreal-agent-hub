@@ -52,6 +52,10 @@ Inspect the result with `hub config` (tokens are shown as `***`). The state fold
 | `defaultTtlMin` | number | `60` | TTL when neither the caller nor the resource gives one |
 | `holdTtlMin` | number | `60` | TTL of holds that have no better value (profile `holdTtlMin` comes first) |
 | `waitMin` | number | `240` | How long `hub lock`, `take` and `hold` wait before giving up |
+| `deadlock.checkSec` | number | `10` | How often a waiter looks for a deadlock it is part of ([PROTOCOL.md](PROTOCOL.md#7-deadlocks)); a negative value turns the check off |
+| `deadlock.jumpWaitSec` | number | `30` | How long a cycle of holders waits for a shared reader in it to go first before a waiter gives up |
+| `deadlock.anySec` | number | `120` | After this long in a cycle any member gives up, not only the youngest (an older client may never give up) |
+| `lockOrder` | string[] | none | Resource ids in the order chains should take them (`["editor", "laptop", "cpp", "cook"]`). Waiting for one while holding a later one is said once, on the first wait (`ORDER` in the log) |
 | `board.allowHosts` | string[] | `[]` | Extra `Host` header values the board accepts, see [BOARD.md](BOARD.md) |
 | `profile` | string | `""` | Force a profile name for every project on this machine |
 | `profiles` | object | none | Per-profile overrides, see below |
