@@ -32,9 +32,10 @@ For probes and dumps the hub runs exactly one fixed remote command:
 ```text
 ssh -o BatchMode=yes -o ConnectTimeout=5 <alias> node .unreal-agent-hub/bin/hub.cjs probe
 ssh -o BatchMode=yes -o ConnectTimeout=5 <alias> node .unreal-agent-hub/bin/hub.cjs dump
+ssh -o BatchMode=yes -o ConnectTimeout=5 <alias> node .unreal-agent-hub/bin/hub.cjs usage --scan --print --machine <id> --tzmin <n> [--match-b64 <base64>]
 ```
 
-The path is relative to the node user's home folder on purpose: an ssh session starts there on every OS, and `~` would not be expanded by `cmd.exe` on Windows. `nodes[].hubPath` changes it. The answer must be JSON on stdout (probe times out after 40 s, dump after 30 s). No remote shell commands are built from user input.
+The path is relative to the node user's home folder on purpose: an ssh session starts there on every OS, and `~` would not be expanded by `cmd.exe` on Windows. `nodes[].hubPath` changes it. The answer must be JSON on stdout (probe times out after 40 s, dump after 30 s, usage after 10 min; the usage filter travels base64-encoded, so no shell ever sees its `|`). No remote shell commands are built from user input.
 
 The project never creates, changes or deletes ssh keys or `authorized_keys`. It only uses an ssh connection that already works without a password.
 

@@ -55,6 +55,11 @@ Inspect the result with `hub config` (tokens are shown as `***`). The state fold
 | `deadlock.checkSec` | number | `10` | How often a waiter looks for a deadlock it is part of ([PROTOCOL.md](PROTOCOL.md#7-deadlocks)); a negative value turns the check off |
 | `deadlock.jumpWaitSec` | number | `30` | How long a cycle of holders waits for a shared reader in it to go first before a waiter gives up |
 | `deadlock.anySec` | number | `120` | After this long in a cycle any member gives up, not only the youngest (an older client may never give up) |
+| `usage.enabled` | boolean | `true` | The board counts what the chats' tokens would cost at API prices ([BOARD.md](BOARD.md#usage)) |
+| `usage.match` | string | the known projects | Regular expression over Claude Code journal folder names (`~/.claude/projects/<folder>`); `*` = every folder |
+| `usage.prices` | string | `lib/prices.json` | A price table of the same shape (relative to the hub home folder) |
+| `usage.everySec`, `usage.nodeEveryMin` | number | `60`, `15` | How often this machine and each node are scanned |
+| `usage.root` | string | `~/.claude/projects` | Where the journals are |
 | `lockOrder` | string[] | none | Resource ids in the order chains should take them (`["editor", "laptop", "cpp", "cook"]`). Waiting for one while holding a later one is said once, on the first wait (`ORDER` in the log) |
 | `board.allowHosts` | string[] | `[]` | Extra `Host` header values the board accepts, see [BOARD.md](BOARD.md) |
 | `profile` | string | `""` | Force a profile name for every project on this machine |

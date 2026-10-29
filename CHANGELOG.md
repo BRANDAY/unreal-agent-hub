@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.10.0 - 2026-10-29
+
+What the chats' tokens would cost at API prices, on the board: the cost counter of the production project's own board,
+made generic.
+
+- **Usage** ([BOARD.md](docs/BOARD.md#usage), `lib/usage.cjs`). Read from the Claude Code journals of the projects the
+  hub knows (or `usage.match`), one response per `message.id|requestId` with the largest output, summed per day and
+  model, priced by `lib/prices.json` (or `usage.prices`; long-context variants by `longContext`). Incremental: the
+  cache `state/usage/<machine>.json` keeps every journal's byte offset.
+- **`hub usage [--json]`** prints the priced summary; **`hub usage --scan [--print]`** reads what this machine's
+  journals appended. `hub serve` scans this machine every 60 s in a child process and each node over ssh every 15 min
+  while it is free (`usage --scan --print`, the filter base64-encoded); a journal seen on two machines counts once.
+- **Board**: a counter tile (today, total) and a Usage section (today, yesterday, 7 days, total, average per day, 30-day
+  bars, chats of today or all time with "open chat", models, price date and source, unpriced models, machine badges);
+  `usage` in `/state`. `usage.enabled: false` or `UAH_USAGE=0` turns it off.
+- Six languages for the new texts. Tests 84/84 (`test/usage.test.cjs` new).
+
 ## 0.9.0 - 2026-10-29
 
 Deadlocks between waiters are found and broken; the probe can ignore look-alike processes. Both come from the home-grown

@@ -3,13 +3,14 @@ import {
   ActionIcon, Accordion, Alert, Badge, Box, Button, Container, Grid, Group, Notification, Paper, SegmentedControl, Select, SimpleGrid, Stack,
   Text, ThemeIcon, Title, Tooltip, useComputedColorScheme, useMantineColorScheme,
 } from '@mantine/core';
-import { IconAlertTriangle, IconBell, IconCloud, IconPlugConnectedX, IconHourglass, IconLock, IconMessages, IconMoon, IconRobot, IconSun } from '@tabler/icons-react';
+import { IconAlertTriangle, IconBell, IconCloud, IconCoin, IconPlugConnectedX, IconHourglass, IconLock, IconMessages, IconMoon, IconRobot, IconSun } from '@tabler/icons-react';
 import Asks, { useAskAlerts } from './Asks.jsx';
 import Resources, { Machines } from './Resources.jsx';
 import Chats from './Chats.jsx';
 import { Cloud, Subagents } from './Agents.jsx';
 import { ChatTime, Load, States, SubagentLoad } from './Charts.jsx';
 import Timeline from './Timeline.jsx';
+import Usage, { usageKpi } from './Usage.jsx';
 import { LANG_NAMES, loadLang, t, tm } from './i18n.js';
 import { hm, post, store, viewState } from './util.js';
 
@@ -129,13 +130,14 @@ export default function App() {
       {live ? null : <Alert color="red" variant="light" mb="md" icon={<IconPlugConnectedX size={18} />}>{t('live.stale', { time: hm(state.at) })}</Alert>}
       <Asks state={state} now={now} act={act} live={live} />
 
-      <SimpleGrid cols={{ base: 2, sm: 3, lg: 6 }} spacing="md" mb="xl">
+      <SimpleGrid cols={{ base: 2, sm: 3, lg: usageKpi(state.usage) ? 7 : 6 }} spacing="md" mb="xl">
         <Kpi icon={IconAlertTriangle} color={need ? 'orange' : 'gray'} value={need} alert={need > 0} label={needText} />
         <Kpi icon={IconMessages} color="green" value={working} total={working + background + idle + stalled + owner} label={t('kpi.chats')} />
         <Kpi icon={IconHourglass} color="cyan" value={background} label={t('kpi.background')} />
         <Kpi icon={IconRobot} color="indigo" value={subRunning} label={t('kpi.subagents')} />
         <Kpi icon={IconLock} color="violet" value={busy} total={state.resources.length} label={queued ? t('kpi.resources', { n: queued }) : t('kpi.resourcesNoQueue')} />
         <Kpi icon={IconCloud} color="cyan" value={(state.cloud || []).length} label={t('kpi.cloud')} />
+        {usageKpi(state.usage) ? <Kpi icon={IconCoin} color="teal" {...usageKpi(state.usage)} /> : null}
       </SimpleGrid>
 
       <Stack gap="xl">
@@ -154,6 +156,7 @@ export default function App() {
           <Text fw={600} mt="xs">{t('h.timeline')}</Text>
           <Timeline state={state} now={now} win={win} setTip={setTip} />
         </Section>
+        {state.usage !== undefined ? <Section title={t('h.usage')} sub={t('h.usageSub')}><Usage state={state} act={act} now={now} /></Section> : null}
         <Accordion variant="contained" radius="md">
           <Accordion.Item value="log">
             <Accordion.Control><Text size="sm">{t('h.log')}</Text></Accordion.Control>

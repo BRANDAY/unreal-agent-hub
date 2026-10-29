@@ -26,6 +26,7 @@ Commands that take `<res>` accept an id (`cpp`), a project resource (`editor`, w
 | `hub serve [--port N] [--no-tunnels]` | Run the board ([BOARD.md](BOARD.md)) |
 | `hub probe` | Print what this machine is busy with, as JSON ([PROFILES.md](PROFILES.md)) |
 | `hub dump` | Print this machine's chats as JSON |
+| `hub usage [--json]` | What the chats' tokens would cost at API prices, from every machine's sums ([BOARD.md](BOARD.md#usage)). `--scan` reads what this machine's journals appended (`--print` prints the sums as JSON for the hub; `--root DIR`, `--machine ID`, `--tzmin N`) |
 | `hub hook [--agent claude\|codex\|cursor]` | Hook entry point; reads the agent's JSON on stdin ([AGENTS.md](AGENTS.md)) |
 | `hub mcp` | MCP server over stdio ([MCP.md](MCP.md)) |
 | `hub mcp-proxy [--stdio\|--probe] [--upstream URL] [--wait SEC] [--port N]` | Watchdog proxy in front of the editor's MCP: `--stdio` per chat, else HTTP; `--probe` checks the editor ([MCP-PROXY.md](MCP-PROXY.md)) |

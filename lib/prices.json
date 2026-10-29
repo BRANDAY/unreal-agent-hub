@@ -1,0 +1,138 @@
+{
+  "_about": "Claude API prices (USD per million tokens) for hub usage: what the Claude Code tokens of the chats would cost at API rates. Columns: input, cacheWrite5m, cacheWrite1h, cacheRead, output. Override with usage.prices in the machine config.",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "read": "2026-10-12",
+  "unit": "USD per million tokens",
+  "columns": [
+    "input",
+    "cacheWrite5m",
+    "cacheWrite1h",
+    "cacheRead",
+    "output"
+  ],
+  "longContext": {
+    "claude-haiku-5-5": {
+      "above": 100000,
+      "use": "claude-haiku-5-5-long"
+    }
+  },
+  "notes": {
+    "claude-haiku-5-5": "prompts up to 100k tokens",
+    "claude-haiku-5-5-long": "prompts over 100k tokens",
+    "claude-5": "the 1M context window of the Claude 5 models is priced at the standard rate"
+  },
+  "models": {
+    "claude-fable-5-1": [
+      10,
+      12.5,
+      20,
+      0.25,
+      50
+    ],
+    "claude-mythos-5-1": [
+      10,
+      12.5,
+      20,
+      0.25,
+      50
+    ],
+    "claude-fable-5": [
+      10,
+      12.5,
+      20,
+      1,
+      50
+    ],
+    "claude-opus-5-5": [
+      4,
+      5,
+      8,
+      0.2,
+      20
+    ],
+    "claude-opus-5": [
+      5,
+      6.25,
+      10,
+      0.5,
+      25
+    ],
+    "claude-opus-4-8": [
+      5,
+      6.25,
+      10,
+      0.5,
+      25
+    ],
+    "claude-opus-4-7": [
+      5,
+      6.25,
+      10,
+      0.5,
+      25
+    ],
+    "claude-opus-4-6": [
+      5,
+      6.25,
+      10,
+      0.5,
+      25
+    ],
+    "claude-opus-4-5": [
+      5,
+      6.25,
+      10,
+      0.5,
+      25
+    ],
+    "claude-sonnet-5-5": [
+      2,
+      2.5,
+      4,
+      0.1,
+      10
+    ],
+    "claude-sonnet-5": [
+      2,
+      2.5,
+      4,
+      0.2,
+      10
+    ],
+    "claude-sonnet-4-6": [
+      3,
+      3.75,
+      6,
+      0.3,
+      15
+    ],
+    "claude-sonnet-4-5": [
+      3,
+      3.75,
+      6,
+      0.3,
+      15
+    ],
+    "claude-haiku-5-5": [
+      0.1,
+      0.125,
+      0.2,
+      0.01,
+      0.5
+    ],
+    "claude-haiku-5-5-long": [
+      0.5,
+      0.625,
+      1,
+      0.05,
+      2.5
+    ],
+    "claude-haiku-4-5": [
+      1,
+      1.25,
+      2,
+      0.1,
+      5
+    ]
+  }
+}

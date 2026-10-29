@@ -25,6 +25,7 @@ const HELP_CMDS = [
   ['serve [--port N] [--no-tunnels]', 'serve'],
   ['probe', 'probe'],
   ['dump', 'dump'],
+  ['usage [--json] | usage --scan [--print]', 'usage', 2],
   ['hook [--agent claude|codex|cursor]', 'hook'],
   ['mcp', 'mcp'],
   ['mcp-proxy [--stdio|--probe] [--upstream URL] [--wait SEC] [--port N]', 'mcpProxy', 2],
@@ -61,7 +62,7 @@ function parse(argv) {
       const k = a.slice(2);
       if (k.startsWith('no-')) { out[k] = true; continue; }
       const nxt = argv[i + 1];
-      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require', 'shared', 'stdio', 'probe'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
+      if (nxt !== undefined && !nxt.startsWith('--') && !['json', 'force', 'off', 'uninstall', 'dry-run', 'ask', 'require', 'shared', 'stdio', 'probe', 'scan', 'print'].includes(k)) { out[k] = nxt; i++; } else out[k] = true;
     } else out._.push(a);
   }
   return out;
@@ -277,6 +278,25 @@ async function main() {
       return print(JSON.stringify(p));
     }
     case 'dump': return print(JSON.stringify(require('../lib/chats.cjs').list(cfg).filter(c => c.machine === cfg.id || !c.machine)));
+    case 'usage': {
+      // --scan: read what this machine's journals appended into state/usage/<machine>.json (--print: the sums as JSON,
+      // for the hub over ssh). Otherwise: the priced summary of every machine's sums.
+      const Us = require('../lib/usage.cjs');
+      if (a.scan) {
+        const machine = typeof a.machine === 'string' ? C.safeId(a.machine) : cfg.id;
+        const match = typeof a['match-b64'] === 'string' ? Buffer.from(a['match-b64'], 'base64').toString('utf8') : undefined;
+        const root = typeof a.root === 'string' ? a.root : Us.settings(cfg).root || undefined;
+        const c = Us.scan({ root, cache: Us.cacheFile(cfg, machine), test: Us.matcher(cfg, match), tzmin: a.tzmin, machine, prices: Us.loadPrices(cfg) });
+        return print(JSON.stringify(a.print ? { machine: c.machine, at: c.at, tzmin: c.tzmin, files: c.files } : { machine: c.machine, at: c.at, files: Object.keys(c.files).length }));
+      }
+      const prices = Us.loadPrices(cfg);
+      if (!prices) die(T('us.err.noPrices', { file: Us.pricesFile(cfg) }));
+      const dir = path.join(cfg.stateDir, 'usage');
+      let names = [];
+      try { names = fs.readdirSync(dir).filter(n => n.endsWith('.json')); } catch (_) {}
+      const s = Us.summarize(names.map(n => Us.readCache(path.join(dir, n))).filter(Boolean), prices, Us.localDate(Date.now()));
+      return print(a.json ? JSON.stringify(s, null, 2) : T('cli.usageSum', { today: s.today.toFixed(2), total: s.total.toFixed(2), n: s.responses, since: s.since || '-' }));
+    }
     case 'install-hooks': {
       const r = require('../lib/install-hooks.cjs').run({ agent: a.agent, uninstall: !!a.uninstall, dryRun: !!a['dry-run'], file: typeof a.file === 'string' ? a.file : undefined, cfg });
       if (a['dry-run']) print(r.text);
