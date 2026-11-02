@@ -146,3 +146,61 @@ test('the hook holds an unreal-mcp call while the editor restarts and denies it 
   assert.equal(out, '', 'other tools are not held');
   clean(t);
 });
+
+test('selfStall: a chat waiting for an app only its own lock keeps down, and nothing of its restart running', async () => {
+  const t = setup();
+  const { cfg, store, w } = t;
+  const notRunning = { running: () => false };
+  const h = await client.acquire(cfg, store, 'editor', { mode: 'hold', session: 'sess-A', chat: 'chat A', noWait: true });
+  assert.ok(h.ok, 'the hold is taken');
+  assert.equal(W.selfStall(store, w, { session: 'sess-A' }, notRunning).token, h.token, 'its own hold, no app, no build: stalled');
+  assert.equal(W.selfStall(store, w, { session: 'sess-B' }, notRunning), null, 'another chat is not stalled by it');
+  assert.equal(W.selfStall(store, w, { session: 'sess-A' }, { running: () => true }), null, 'an app process (booting): it is coming');
+  const b = await client.acquire(cfg, store, 'cpp', { mode: 'script', session: 'sess-A', chat: 'chat A', noWait: true });
+  assert.equal(W.selfStall(store, w, { session: 'sess-A' }, notRunning), null, 'its own build runs: the restart is under way');
+  client.release(cfg, store, 'cpp', b.token, 'done');
+  const r = await W.waitRestart(cfg, store, w, { who: { session: 'sess-A' }, pollMs: 20, waitSec: 20, stallSec: 0.1, checkMs: 0, running: () => false });
+  assert.deepEqual([r.ok, r.self], [false, true], 'refused long before waitSec');
+  assert.match(r.reason, /YOU hold .*editor.*waiting for yourself/);
+  const other = await W.waitRestart(cfg, store, w, { who: { session: 'sess-B' }, pollMs: 20, waitSec: 0.2, stallSec: 0, checkMs: 0, running: () => false });
+  assert.deepEqual([other.ok, !!other.self], [false, false], 'another chat waits out waitSec as before');
+  client.release(cfg, store, 'editor', h.token, 'done');
+  clean(t);
+});
+
+test('watchdog: down under a held lock for alertMin raises one alarm per lock - log, board, the holder\'s next tool call', async () => {
+  const t = setup();
+  const { cfg, store, w, dir } = t;
+  let clock = Date.now(), alive = false;
+  const logs = [], sent = [];
+  const tick = W.makeWatchdog(cfg, store, w, l => logs.push(l), { portAlive: async () => alive, running: () => false, now: () => clock,
+    start: () => {}, notify: (c, ev) => sent.push(ev) });
+  const h = await client.acquire(cfg, store, 'editor', { mode: 'hold', session: 'sess-A', chat: 'chat A', noWait: true });
+  assert.equal(await tick(), 'busy');
+  assert.equal(W.readStall(cfg, 'Game'), null, 'not before alertMin');
+  clock += 4 * 60e3;
+  assert.equal(await tick(), 'busy');
+  const s = W.readStall(cfg, 'Game');
+  assert.deepEqual([s.session, s.token, s.minutes], ['sess-A', h.token, 4]);
+  assert.ok(logs.some(l => /down 4 min with no app process while .*chat A.* nobody is starting it/.test(l)));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].kind, 'stall');
+  clock += 60e3;
+  await tick();
+  assert.equal(sent.length, 1, 'one alarm per lock');
+  assert.equal(W.readStall(cfg, 'Game').minutes, 5, 'the minutes go on');
+  const run = async (session) => {
+    let out = '';
+    await require('../lib/hook.cjs').run('claude', { cfg, stdout: { write: x => { out += x; } },
+      input: { session_id: session, hook_event_name: 'PreToolUse', cwd: dir, tool_name: 'Bash', tool_input: { command: 'ls' } } });
+    return out;
+  };
+  assert.equal(await run('sess-B'), '', 'another chat is not told');
+  assert.match(await run('sess-A'), /down for 5 min under YOUR lock/);
+  assert.equal(await run('sess-A'), '', 'told once');
+  alive = true;
+  assert.equal(await tick(), 'up');
+  assert.equal(W.readStall(cfg, 'Game'), null, 'back up: the alarm is gone');
+  client.release(cfg, store, 'editor', h.token, 'done');
+  clean(t);
+});

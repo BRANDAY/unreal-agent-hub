@@ -47,6 +47,24 @@ the app when all of these hold:
 A clean exit with no marker is a person's own close: it stays closed. At most `maxPerHour` (2) starts an hour. Each
 decision is written to `state/log.txt` as a `WATCH` line, once per change. `UAH_WATCH=0` turns the watchdogs off.
 
+## 4. Stalls: down under a lock, and nobody starting it
+
+The watchdog never starts the app while a `busy` resource is held, so a chat that holds one with the app down and
+nothing running (its build failed, its start script gave up, it moved on to other work) leaves every other chat
+believing the app is busy. Two guards:
+
+- **The alarm.** Down for `alertMin` (3) minutes with no app process under a held busy lock: one `WATCH` line in
+  `state/log.txt`, a red banner on the board while it lasts (`state/watch/<project>.stall.json`), a `stall` notice
+  (also to the duty chat with the `remote-control` sink), and the holder's chat is told on its next tool call - once
+  per lock. The banner goes when the app answers, an app process appears or the lock is gone.
+- **Waiting for yourself.** A call that waits for the app - in the hook's gate or in the MCP proxy - is refused after
+  `stallSec` (60) seconds when the caller itself (its session or its agent's process) holds the busy lock, no app
+  process runs and no other lock of the caller (its build, its cook) is live. The refusal says so and names the
+  start command, instead of a wait of `waitSec` that ends the same way. Logged as `SELFSTALL`.
+
+Seen on 02.11.2026: a chat's `hold editor` was granted while the editor was already down; the same chat's MCP call
+then waited 900 s in the proxy for an editor only its own lock kept down, and three chats queued behind it.
+
 ## Configuration
 
 The unreal profile ships the detection; the project adds the command that starts its editor:
@@ -82,6 +100,8 @@ The unreal profile ships the detection; the project adds the command that starts
 | `quietMin` | `2` | Minutes after the last `busy` lock before the watchdog acts |
 | `maxPerHour` | `2` | Starts an hour at most |
 | `openingMin` | `20` | How long after a watchdog start agent calls still wait for it |
+| `alertMin` | `3` | Down this long with no app process under a held busy lock: the stall alarm |
+| `stallSec` | `60` | A caller waiting for an app only its own lock keeps down is refused after this long |
 
 In the overlay, single keys replace the profile's; `"watch": false` turns it off for the project.
 

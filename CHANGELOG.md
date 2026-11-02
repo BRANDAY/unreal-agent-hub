@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.0 - 2026-11-02
+
+An app down under a held lock is no longer silent ([WATCH.md](docs/WATCH.md#4-stalls-down-under-a-lock-and-nobody-starting-it)).
+On 02.11.2026 the editor lay down for half an hour under a rebuild hold; the holder's own MCP call waited 900 s for
+itself, three chats queued, and the watchdog said nothing because a busy lock was held.
+
+- **Stall alarm.** The watchdog raises one alarm per lock when the app has been down for `watch.alertMin` (3) minutes
+  with no app process under a held busy lock: a `WATCH` line, a red banner on the board while it lasts
+  (`state/watch/<project>.stall.json`, `stalls` in the board state), a `stall` notice, and a note to the holder's
+  chat on its next tool call.
+- **Waiting for yourself is refused.** The hook's restart gate and the MCP proxy refuse a call after `watch.stallSec`
+  (60) seconds when the caller holds the busy lock itself, no app process runs and none of its other locks is live
+  (`selfStall`, logged as `SELFSTALL`), naming the start command and `hub release`.
+- Six languages for the new texts. Tests: two new in `test/watch.test.cjs`.
+
 ## 0.10.0 - 2026-10-29
 
 What the chats' tokens would cost at API prices, on the board: the cost counter of the production project's own board,

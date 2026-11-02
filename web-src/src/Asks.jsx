@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import { ActionIcon, Anchor, Button, Group, Paper, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core';
-import { IconCircleCheck, IconUser, IconX } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCircleCheck, IconUser, IconX } from '@tabler/icons-react';
 import { t, tm } from './i18n.js';
 import { hm, human, machineLabel, store } from './util.js';
 
@@ -26,12 +26,23 @@ export default function Asks({ state, now, act, live }) {
   const asks = all.filter(a => !hidden.has(askId(a)));
   const hiddenNow = all.length - asks.length;
   const notices = (state.notices || []).filter(n => n.kind === 'return' && now - n.t < 15 * 60e3 && !hidden.has('n|' + n.t));
-  if (!asks.length && !notices.length && !hiddenNow) return null;
-  const hide = id => <Tooltip label={id.startsWith('n|') ? t('ask.hide') : t('ask.hideTip')} multiline w={260} withArrow>
+  // The watchdog's alarms: shown while they last (the hub removes one when the app is back or the lock is gone).
+  const stalls = (state.stalls || []).filter(s => !hidden.has('s|' + s.token));
+  if (!asks.length && !notices.length && !stalls.length && !hiddenNow) return null;
+  const hide = id => <Tooltip label={/^[ns]\|/.test(id) ? t('ask.hide') : t('ask.hideTip')} multiline w={260} withArrow>
     <ActionIcon variant="subtle" color="gray" size="sm" aria-label={t('ask.hide')} onClick={() => save(new Set([...hidden, id]))}><IconX size={16} /></ActionIcon>
   </Tooltip>;
   return (
     <Stack gap="sm" mb="lg" ref={ref}>
+      {stalls.map(s => (
+        <Paper key={'s' + s.token} withBorder p="sm" radius="md" style={{ borderColor: 'var(--mantine-color-red-6)' }}>
+          <Group justify="space-between" wrap="nowrap">
+            <Group gap="xs" wrap="nowrap"><IconAlertTriangle size={18} color="var(--mantine-color-red-6)" />
+              <Text size="sm">{t('stall.banner', { project: s.project, min: s.minutes, who: s.chat || s.session || '?', resource: s.resource })}</Text></Group>
+            <Group gap={4} wrap="nowrap"><Text size="xs" c="dimmed">{hm(s.since)}</Text>{hide('s|' + s.token)}</Group>
+          </Group>
+        </Paper>
+      ))}
       {asks.map(a => {
         const node = (state.nodes || []).find(n => n.key === a.key);
         const machine = node ? node.label : a.label || a.key;
