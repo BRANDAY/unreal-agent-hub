@@ -204,3 +204,35 @@ test('watchdog: down under a held lock for alertMin raises one alarm per lock - 
   client.release(cfg, store, 'editor', h.token, 'done');
   clean(t);
 });
+
+test('watchdog: a hung hold on the editor is released after releaseMin, the holder is told, the app is started', async () => {
+  const t = setup();
+  const { cfg, store, dir } = t;
+  const w = Object.assign({}, t.w, { releaseKeys: ['Game~editor'] });
+  let clock = Date.now(), started = 0;
+  const logs = [];
+  const tick = W.makeWatchdog(cfg, store, w, l => logs.push(l), { portAlive: async () => false, running: () => false, now: () => clock,
+    start: () => { started++; }, notify: () => {} });
+  const h = await client.acquire(cfg, store, 'editor', { mode: 'hold', session: 'sess-A', chat: 'chat A', noWait: true });
+  const b = await client.acquire(cfg, store, 'cpp', { mode: 'script', session: 'sess-A', chat: 'chat A', noWait: true });
+  assert.equal(await tick(), 'busy');
+  clock += 11 * 60e3;
+  assert.equal(await tick(), 'busy', 'its own build runs: not hung');
+  client.release(cfg, store, 'cpp', b.token, 'done');
+  assert.equal(await tick(), 'released', 'nothing of the holder runs: released');
+  assert.equal(store.readLock('Game~editor'), null);
+  assert.ok(logs.some(l => /released the hung hold of .*chat A/.test(l)));
+  assert.equal(await tick(), 'started', 'started at once, no quietMin after a release');
+  assert.equal(started, 1);
+  let out = '';
+  await require('../lib/hook.cjs').run('claude', { cfg, stdout: { write: x => { out += x; } },
+    input: { session_id: 'sess-A', hook_event_name: 'PreToolUse', cwd: dir, tool_name: 'Bash', tool_input: { command: 'ls' } } });
+  assert.match(out, /your hold on Game~editor was released/);
+  const c = await client.acquire(cfg, store, 'cpp', { mode: 'hold', session: 'sess-C', chat: 'chat C', noWait: true });
+  const tick2 = W.makeWatchdog(cfg, store, w, () => {}, { portAlive: async () => false, running: () => false, now: () => clock, start: () => {}, notify: () => {} });
+  await tick2(); clock += 30 * 60e3;
+  assert.equal(await tick2(), 'busy', 'a hold on cpp is never released by the watchdog');
+  client.release(cfg, store, 'cpp', c.token, 'done');
+  void h;
+  clean(t);
+});

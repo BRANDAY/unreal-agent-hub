@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1 - 2026-11-02
+
+- **A hung hold is released** ([WATCH.md](docs/WATCH.md#4-stalls-down-under-a-lock-and-nobody-starting-it)). The app
+  down for `watch.releaseMin` (10) minutes under a `hold` on a `watch.release` resource (the unreal profile: the
+  editor, never `cpp` or a cook) whose holder has nothing running: the watchdog releases the hold, marks the app as
+  closed by that chat and starts it at once; the holder is told on its next tool call. The stall note to the holder
+  says when this happens. Six languages for the new texts; one new test in `test/watch.test.cjs`.
+
 ## 0.11.0 - 2026-11-02
 
 An app down under a held lock is no longer silent ([WATCH.md](docs/WATCH.md#4-stalls-down-under-a-lock-and-nobody-starting-it)).

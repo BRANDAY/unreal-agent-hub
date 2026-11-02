@@ -61,6 +61,11 @@ believing the app is busy. Two guards:
   `stallSec` (60) seconds when the caller itself (its session or its agent's process) holds the busy lock, no app
   process runs and no other lock of the caller (its build, its cook) is live. The refusal says so and names the
   start command, instead of a wait of `waitSec` that ends the same way. Logged as `SELFSTALL`.
+- **The hung hold is released.** Down for `releaseMin` (10) minutes, and the lock is a `hold` on a `release`
+  resource (the unreal profile: the editor - never a build's `cpp` or a cook) whose holder has nothing running (no
+  app process, no other live lock of its own): the watchdog releases it (a `FREE` line "released by the watchdog"),
+  marks the app as closed by that chat and starts it on the next tick, without `quietMin`. The holder is told on its
+  next tool call that it no longer holds the resource. `releaseMin: 0` turns this off.
 
 Seen on 02.11.2026: a chat's `hold editor` was granted while the editor was already down; the same chat's MCP call
 then waited 900 s in the proxy for an editor only its own lock kept down, and three chats queued behind it.
@@ -102,6 +107,8 @@ The unreal profile ships the detection; the project adds the command that starts
 | `openingMin` | `20` | How long after a watchdog start agent calls still wait for it |
 | `alertMin` | `3` | Down this long with no app process under a held busy lock: the stall alarm |
 | `stallSec` | `60` | A caller waiting for an app only its own lock keeps down is refused after this long |
+| `release` | unreal: `["editor"]` | Resources whose hung `hold` the watchdog may release |
+| `releaseMin` | `10` | Down this long under a hung hold on a `release` resource: released, app started (0 = never) |
 
 In the overlay, single keys replace the profile's; `"watch": false` turns it off for the project.
 
